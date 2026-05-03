@@ -60,7 +60,7 @@ const commands = [
       o.setName('user').setDescription('選取陪陪').setRequired(true)
     )
     .addIntegerOption(o =>
-      o.setName('amount').setDescription('提領金額').setRequired(true)
+      o.setName('amount').setDescription('輸入提領金額').setRequired(true)
     )
 ];
 
@@ -123,8 +123,8 @@ client.on(Events.InteractionCreate, async (i) => {
     return i.reply({
 		content:
 		`目前陪陪資訊如下 :
-		陪陪ID： ${target.username}
-		總累積薪資： ${total} 元
+		陪陪ID： ${target.username}\n
+		總累積薪資： ${total} 元\n
 		目前可提領： ${balance} 元`,
       ephemeral: true
     });
@@ -155,10 +155,10 @@ client.on(Events.InteractionCreate, async (i) => {
     return i.reply({
 		content:
 		`發薪完成！
-		陪陪ID： ${target.username}
-		金額： ${amount} 元
-		工單日期： ${date}
-		遊戲單別： ${type}
+		陪陪ID： ${target.username}\n
+		金額： ${amount} 元\n
+		工單日期： ${date}\n
+		遊戲單別： ${type}\n
 		闆闆名稱： ${boss}`
     });
   }
@@ -186,8 +186,8 @@ client.on(Events.InteractionCreate, async (i) => {
 
     return i.reply({
 		content: `提領成功！
-		陪陪ID： ${target.username}
-		提領薪水： ${amount} 元
+		陪陪ID： ${target.username}\n
+		提領薪水： ${amount} 元\n
 		當前剩餘薪水： ${balance - amount} 元`
     });
   }
