@@ -41,7 +41,7 @@ const commands = [
       o.setName('user').setDescription('選取陪陪').setRequired(true)
     )
     .addIntegerOption(o =>
-      o.setName('amount').setDescription('金額').setRequired(true)
+      o.setName('amount').setDescription('輸入此單金額').setRequired(true)
     )
     .addStringOption(o =>
       o.setName('date').setDescription('工單日期').setRequired(true)
@@ -50,7 +50,7 @@ const commands = [
       o.setName('type').setDescription('遊戲單別').setRequired(true)
     )
     .addStringOption(o =>
-      o.setName('boss').setDescription('闆闆名字').setRequired(true)
+      o.setName('boss').setDescription('老闆名字').setRequired(true)
     ),
 
   new SlashCommandBuilder()
@@ -60,7 +60,7 @@ const commands = [
       o.setName('user').setDescription('選取陪陪').setRequired(true)
     )
     .addIntegerOption(o =>
-      o.setName('amount').setDescription('金額').setRequired(true)
+      o.setName('amount').setDescription('提領金額').setRequired(true)
     )
 ];
 
@@ -121,11 +121,11 @@ client.on(Events.InteractionCreate, async (i) => {
     const total = await getTotal(target.id);
 
     return i.reply({
-      content:
-`💰目前陪陪資訊如下 :
-👤 陪陪ID： ${target.username}
-💎總累積薪資： ${total} 元
-💵目前可提領： ${balance} 元`,
+		content:
+		`目前陪陪資訊如下 :
+		陪陪ID： ${target.username}
+		總累積薪資： ${total} 元
+		目前可提領： ${balance} 元`,
       ephemeral: true
     });
   }
@@ -153,13 +153,13 @@ client.on(Events.InteractionCreate, async (i) => {
     await addTotal(target.id, amount);
 
     return i.reply({
-      content:
-`💰發薪完成！
-👤 陪陪名稱： ${target.username}
-💵 金額： ${amount} 元
-📅 工單日期： ${date}
-🎮 遊戲單別： ${type}
-👑 闆闆名稱： ${boss}`
+		content:
+		`發薪完成！
+		陪陪ID： ${target.username}
+		金額： ${amount} 元
+		工單日期： ${date}
+		遊戲單別： ${type}
+		闆闆名稱： ${boss}`
     });
   }
 
@@ -185,10 +185,10 @@ client.on(Events.InteractionCreate, async (i) => {
     await updateBalance(target.id, -amount);
 
     return i.reply({
-      content: `💸提領成功！
-👤 陪陪ID： ${target.username}
-💵 提領薪水： ${amount} 元
-📉 當前剩餘薪水： ${balance - amount} 元`
+		content: `提領成功！
+		陪陪ID： ${target.username}
+		提領薪水： ${amount} 元
+		當前剩餘薪水： ${balance - amount} 元`
     });
   }
 });
