@@ -2,10 +2,11 @@ import { Client, GatewayIntentBits, Events, REST, Routes, SlashCommandBuilder } 
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, get, set, runTransaction } from 'firebase/database';
 
+// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyAsjzcvDVB4AEhk79mgCJt7b2m1QV_zbuE",
   authDomain: "workingnai.firebaseapp.com",
-  databaseURL: "https://workingnai-default-rtdb.asia-southeast1.firebasedatabase.app/",
+  databaseURL: "https://workingnai-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "workingnai",
   storageBucket: "workingnai.firebasestorage.app",
   messagingSenderId: "G-CX7S8K49BF",
@@ -19,9 +20,7 @@ const ADMIN_ROLE = "老大";
 
 const client = new Client({
   intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
+    GatewayIntentBits.Guilds
   ]
 });
 
@@ -37,34 +36,34 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName('add')
-    .setDescription('儲值(老大限定)')
+    .setDescription('發薪水(老大限定)')
     .addUserOption(o =>
-      o.setName('user')
-        .setDescription('選取陪陪')
-        .setRequired(true)
+      o.setName('user').setDescription('選取陪陪').setRequired(true)
     )
     .addIntegerOption(o =>
-      o.setName('amount')
-        .setDescription('金額')
-        .setRequired(true)
+      o.setName('amount').setDescription('金額').setRequired(true)
+    )
+    .addStringOption(o =>
+      o.setName('date').setDescription('工單日期').setRequired(true)
+    )
+    .addStringOption(o =>
+      o.setName('type').setDescription('遊戲單別').setRequired(true)
+    )
+    .addStringOption(o =>
+      o.setName('boss').setDescription('闆闆名字').setRequired(true)
     ),
 
   new SlashCommandBuilder()
     .setName('charge')
-    .setDescription('扣款(老大限定)')
+    .setDescription('提領薪水(老大限定)')
     .addUserOption(o =>
-      o.setName('user')
-        .setDescription('選取陪陪')
-        .setRequired(true)
+      o.setName('user').setDescription('選取陪陪').setRequired(true)
     )
     .addIntegerOption(o =>
-      o.setName('amount')
-        .setDescription('金額')
-        .setRequired(true)
+      o.setName('amount').setDescription('金額').setRequired(true)
     )
 ];
 
-// ======================
 client.once(Events.ClientReady, async () => {
   console.log(`已上線：${client.user.tag}`);
 
@@ -79,57 +78,27 @@ client.once(Events.ClientReady, async () => {
 });
 
 async function getBalance(userId) {
-  try {
-    const snapshot = await get(ref(db, `balances/${userId}`));
-    if (!snapshot.exists()) {
-      await set(ref(db, `balances/${userId}`), 0);
-      return 0;
-    }
-    return snapshot.val();
-  } catch (err) {
-    console.error(err);
+  const snapshot = await get(ref(db, `balances/${userId}`));
+  if (!snapshot.exists()) {
+    await set(ref(db, `balances/${userId}`), 0);
     return 0;
   }
-}
-
-async function setBalance(userId, amount) {
-  try {
-    await set(ref(db, `balances/${userId}`), amount);
-  } catch (err) {
-    console.error(err);
-  }
+  return snapshot.val();
 }
 
 async function updateBalance(userId, delta) {
   const userRef = ref(db, `balances/${userId}`);
-  try {
-    await runTransaction(userRef, (current) => {
-      return (current || 0) + delta;
-    });
-  } catch (err) {
-    console.error(err);
-  }
+  await runTransaction(userRef, (current) => (current || 0) + delta);
 }
+
 async function addTotal(userId, amount) {
-	
   const totalRef = ref(db, `total/${userId}`);
-  try {
-    await runTransaction(totalRef, (current) => {
-      return (current || 0) + amount;
-    });
-  } catch (err) {
-    console.error(err);
-  }
+  await runTransaction(totalRef, (current) => (current || 0) + amount);
 }
 
 async function getTotal(userId) {
-  try {
-    const snapshot = await get(ref(db, `total/${userId}`));
-    return snapshot.exists() ? snapshot.val() : 0;
-  } catch (err) {
-    console.error(err);
-    return 0;
-  }
+  const snapshot = await get(ref(db, `total/${userId}`));
+  return snapshot.exists() ? snapshot.val() : 0;
 }
 
 client.on(Events.InteractionCreate, async (i) => {
@@ -137,13 +106,9 @@ client.on(Events.InteractionCreate, async (i) => {
 
   const isAdmin = i.member.roles.cache.some(r => r.name === ADMIN_ROLE);
 
-  const target = i.options.getUser("user") || i.user;
-  const amount = i.options.getInteger("amount");
-
-  const balance = await getBalance(target.id);
-
-  // 查餘額
   if (i.commandName === "balance") {
+
+    const target = i.options.getUser("user") || i.user;
 
     if (target.id !== i.user.id && !isAdmin) {
       return i.reply({
@@ -151,42 +116,67 @@ client.on(Events.InteractionCreate, async (i) => {
         ephemeral: true
       });
     }
-	
-	const total = await getTotal(target.id);
+
+    const balance = await getBalance(target.id);
+    const total = await getTotal(target.id);
+
     return i.reply({
-      content: `💰目前陪陪資訊如下:\n ${target.username} \n總累積賺取的薪資為\n${total} 元\n目前可提領餘額為\n${balance} 元`,
+      content:
+`💰目前陪陪資訊如下 :
+👤 陪陪ID： ${target.username}
+💎總累積薪資： ${total} 元
+💵目前可提領： ${balance} 元`,
       ephemeral: true
     });
   }
 
-  // 儲值
+  // ======================
+  // add（發薪水）
+  // ======================
   if (i.commandName === "add") {
-	  
-	if (!amount || amount <= 0) {
-	  return i.reply({ content: "金額錯誤", ephemeral: true });
-	}
-	  
+
     if (!isAdmin) {
       return i.reply({ content: "您不是老大，無法使用!", ephemeral: true });
+    }
+
+    const target = i.options.getUser("user");
+    const amount = i.options.getInteger("amount");
+    const date = i.options.getString("date");
+    const type = i.options.getString("type");
+    const boss = i.options.getString("boss");
+
+    if (!amount || amount <= 0) {
+      return i.reply({ content: "金額錯誤", ephemeral: true });
     }
 
     await updateBalance(target.id, amount);
-	await addTotal(target.id, amount);
+    await addTotal(target.id, amount);
+
     return i.reply({
-      content: `💰勞大已幫 ${target.username} 陪陪發薪 ${amount} 元!`,
+      content:
+`💰發薪完成！
+👤 陪陪名稱： ${target.username}
+💵 金額： ${amount} 元
+📅 工單日期： ${date}
+🎮 遊戲單別： ${type}
+👑 闆闆名稱： ${boss}`
     });
   }
 
-  // 扣款
   if (i.commandName === "charge") {
-	  
-	if (!amount || amount <= 0) {
-	  return i.reply({ content: "金額錯誤", ephemeral: true });
-	}
-	  
+
     if (!isAdmin) {
       return i.reply({ content: "您不是老大，無法使用!", ephemeral: true });
     }
+
+    const target = i.options.getUser("user");
+    const amount = i.options.getInteger("amount");
+
+    if (!amount || amount <= 0) {
+      return i.reply({ content: "金額錯誤", ephemeral: true });
+    }
+
+    const balance = await getBalance(target.id);
 
     if (balance < amount) {
       return i.reply({ content: "目前餘額不足", ephemeral: true });
@@ -195,12 +185,15 @@ client.on(Events.InteractionCreate, async (i) => {
     await updateBalance(target.id, -amount);
 
     return i.reply({
-      content: `💸勞大已幫陪陪 ${target.username} 提領薪資 ${amount} 元\n剩餘可提領餘額為:\n${balance - amount} 元!`,
+      content: `💸提領成功！
+👤 陪陪ID： ${target.username}
+💵 提領薪水： ${amount} 元
+📉 當前剩餘薪水： ${balance - amount} 元`
     });
   }
 });
 
-// TOKEN 檢查
+// ======================
 if (!process.env.TOKEN) {
   console.error("TOKEN 未設定");
   process.exit(1);
