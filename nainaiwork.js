@@ -653,20 +653,6 @@ client.on(Events.InteractionCreate, async (i) => {
 			});
 		  }
 
-		  const ratedRef = ref(db, `rated/${i.channel.id}/${i.user.id}`);
-
-		  const result = await runTransaction(ratedRef, (current) => {
-			if (current) return;
-			return true;
-		  });
-
-		  if (!result.committed) {
-			return i.reply({
-			  content: "❌ 你已經評價過了",
-			  ephemeral: true
-			});
-		  }
-
 		  const score = i.customId.split("_")[1];
 
 		  const modal = new ModalBuilder()
@@ -769,20 +755,64 @@ client.on(Events.InteractionCreate, async (i) => {
 			});
 		  }
 
+		  // 🎯 抓工單玩家（闆闆）
+		  const customerId = i.channel.permissionOverwrites.cache.find(p =>
+			p.allow.has(PermissionFlagsBits.ViewChannel) &&
+			p.id !== STAFF_ROLE_ID &&
+			p.id !== COMPANION_ROLE_ID &&
+			p.id !== OWNER_ROLE_ID &&
+			p.id !== client.user.id
+		  )?.id;
+
+		  if (!customerId) {
+			return i.reply({
+			  content: "❌ 無法識別玩家",
+			  ephemeral: true
+			});
+		  }
+
+		  // 🔊 建立語音頻道
 		  const voiceChannel = await i.guild.channels.create({
 			name: `語音-${i.channel.name}`,
 			type: ChannelType.GuildVoice,
 			parent: VOICE_CATEGORY_ID,
 			permissionOverwrites: [
+			  // ❌ 全體禁止
 			  { id: i.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
 
-			  { id: i.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect, PermissionFlagsBits.Speak] },
+			  // 👤 玩家（工單創建人）
+			  { id: customerId, allow: [
+				PermissionFlagsBits.ViewChannel,
+				PermissionFlagsBits.Connect,
+				PermissionFlagsBits.Speak
+			  ]},
 
-			  { id: STAFF_ROLE_ID, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect, PermissionFlagsBits.Speak] },
+			  // 🧑‍💼 客服
+			  { id: STAFF_ROLE_ID, allow: [
+				PermissionFlagsBits.ViewChannel,
+				PermissionFlagsBits.Connect,
+				PermissionFlagsBits.Speak
+			  ]},
 
-			  { id: COMPANION_ROLE_ID, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect, PermissionFlagsBits.Speak] },
+			  // 🎧 陪陪
+			  { id: COMPANION_ROLE_ID, allow: [
+				PermissionFlagsBits.ViewChannel,
+				PermissionFlagsBits.Connect,
+				PermissionFlagsBits.Speak
+			  ]},
 
-			  { id: OWNER_ROLE_ID, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect] }
+			  // 👑 店長（可看+進，不講話）
+			  { id: OWNER_ROLE_ID, allow: [
+				PermissionFlagsBits.ViewChannel,
+				PermissionFlagsBits.Connect
+			  ]},
+
+			  // 🤖 Bot
+			  { id: client.user.id, allow: [
+				PermissionFlagsBits.ViewChannel,
+				PermissionFlagsBits.Connect,
+				PermissionFlagsBits.Speak
+			  ]}
 			]
 		  });
 
@@ -801,25 +831,26 @@ client.on(Events.InteractionCreate, async (i) => {
       }
 	  
 	  if (i.customId === "gift") {
-		  
+
 		  const safeName = i.user.username
 			.replace(/[^\w\-]/g, "_")
 			.toLowerCase();
 
 		  await i.guild.channels.fetch();
-		  
+
 		  const existing = i.guild.channels.cache.find(c =>
-			  c.parentId === TICKET_CATEGORY_ID &&
-			  c.name === safeName
-			);
+			c.parentId === TICKET_CATEGORY_ID &&
+			c.name === safeName
+		  );
 
-			if (existing) {
-			  return i.reply({
-				content: `❌ 你已經有禮物工單：${existing}`,
-				ephemeral: true
-			  });
-			}
+		  if (existing) {
+			return i.reply({
+			  content: `❌ 你已經有禮物工單：${existing}`,
+			  ephemeral: true
+			});
+		  }
 
+		  // ===== 建立頻道 =====
 		  const channel = await i.guild.channels.create({
 			name: safeName,
 			type: ChannelType.GuildText,
@@ -827,75 +858,108 @@ client.on(Events.InteractionCreate, async (i) => {
 			permissionOverwrites: [
 			  { id: i.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
 
-			  // 闆闆（開單者）
-			  { id: i.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
+			  { id: i.user.id, allow: [
+				PermissionFlagsBits.ViewChannel,
+				PermissionFlagsBits.SendMessages
+			  ]},
 
-			  // 客服
-			  { id: STAFF_ROLE_ID, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
+			  { id: STAFF_ROLE_ID, allow: [
+				PermissionFlagsBits.ViewChannel,
+				PermissionFlagsBits.SendMessages
+			  ]},
 
-			  // 陪陪
-			  { id: COMPANION_ROLE_ID, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
+			  { id: COMPANION_ROLE_ID, allow: [
+				PermissionFlagsBits.ViewChannel,
+				PermissionFlagsBits.SendMessages
+			  ]},
 
-			  // 店長（可看即可，是否可發言你自己決定）
-			  { id: OWNER_ROLE_ID, allow: [PermissionFlagsBits.ViewChannel] },
+			  { id: OWNER_ROLE_ID, allow: [
+				PermissionFlagsBits.ViewChannel
+			  ]},
 
-			  // Bot
-			  { id: client.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] }
+			  { id: client.user.id, allow: [
+				PermissionFlagsBits.ViewChannel,
+				PermissionFlagsBits.SendMessages
+			  ]}
 			]
 		  });
-		  
+
+		  // ===== 禮物選單 =====
 		  const giftMenu = new ActionRowBuilder().addComponents(
-			  new StringSelectMenuBuilder()
-				.setCustomId("gift_select_item")
-				.setPlaceholder("🎁 選擇想要送的禮物")
-				.addOptions([
-				  { label: "布丁", value: "33" },
-				  { label: "棉花糖", value: "100" },
-				  { label: "仙女棒", value: "250" },
-				  { label: "鹹酥雞", value: "365" },
-				  { label: "好寶寶印章", value: "499" },
-				  { label: "麻將發大財", value: "888" },
-				  { label: "鑽戒", value: "1314" }
-				])
-			);
-			await i.guild.members.fetch();
-			const bossMembers = i.guild.members.cache.filter(m =>
-			  hasRole(m, [STAFF_ROLE_ID, COMPANION_ROLE_ID])
-			);
+			new StringSelectMenuBuilder()
+			  .setCustomId("gift_select_item")
+			  .setPlaceholder("🎁 選擇想要送的禮物")
+			  .addOptions([
+				{ label: "布丁", value: "33" },
+				{ label: "棉花糖", value: "100" },
+				{ label: "仙女棒", value: "250" },
+				{ label: "鹹酥雞", value: "365" },
+				{ label: "好寶寶印章", value: "499" },
+				{ label: "麻將發大財", value: "888" },
+				{ label: "鑽戒", value: "1314" }
+			  ])
+		  );
 
-			if (bossMembers.size === 0) {
-			  return i.reply({
-				content: "❌ 目前沒有可選擇的陪陪",
-				ephemeral: true
-			  });
-			}
+		  // ===== 取得陪陪 =====
+		  await i.guild.members.fetch();
 
-			const bossMenu = new ActionRowBuilder().addComponents(
-			  new StringSelectMenuBuilder()
-				.setCustomId("gift_select_boss")
-				.setPlaceholder("👤 選擇要送的陪陪")
-				.addOptions(
-				  bossMembers.map(m => ({
-					label: (m.displayName || "未知陪陪")
-					  .replace(/\n/g, " ")
-					  .slice(0, 100),
-					value: m.id
-				  }))
-				)
-			);
-			const confirmBtn = new ActionRowBuilder().addComponents(
-			  new ButtonBuilder()
-				.setCustomId("gift_confirm")
-				.setLabel("🎁 確認送出")
-				.setStyle(ButtonStyle.Success)
-			);
+		  const bossMembers = i.guild.members.cache.filter(m =>
+			hasRole(m, [STAFF_ROLE_ID, COMPANION_ROLE_ID])
+		  );
 
+		  if (bossMembers.size === 0) {
+			return i.reply({
+			  content: "❌ 目前沒有可選擇的陪陪",
+			  ephemeral: true
+			});
+		  }
+
+		  // ===== 安全 options =====
+		  const options = bossMembers.map(m => ({
+			label: (m.displayName || "未知陪陪")
+			  .replace(/\n/g, " ")
+			  .substring(0, 100),
+			value: m.id
+		  }));
+
+		  if (!options.length) {
+			return i.reply({
+			  content: "❌ 陪陪資料異常",
+			  ephemeral: true
+			});
+		  }
+
+		  const bossMenu = new ActionRowBuilder().addComponents(
+			new StringSelectMenuBuilder()
+			  .setCustomId("gift_select_boss")
+			  .setPlaceholder("👤 選擇要送的陪陪")
+			  .addOptions(options)
+		  );
+
+		  const confirmBtn = new ActionRowBuilder().addComponents(
+			new ButtonBuilder()
+			  .setCustomId("gift_confirm")
+			  .setLabel("🎁 確認送出")
+			  .setStyle(ButtonStyle.Success)
+		  );
+
+		  // ===== 發送 =====
+		  try {
 			await channel.send({
-content: `🎁 禮物工單
-👤 玩家：${i.user}
-📌 請選擇禮物與陪陪`,
+			  content: `🎁 禮物工單
+		👤 玩家：${i.user}
+		📌 請選擇禮物與陪陪`,
 			  components: [giftMenu, bossMenu, confirmBtn]
 			});
+		  } catch (err) {
+			console.error("gift send error:", err);
+
+			return i.reply({
+			  content: "❌ 工單已建立，但內容發送失敗",
+			  ephemeral: true
+			});
+		  }
+
 		  return i.reply({
 			content: `✅ 已建立禮物工單：${channel}`,
 			ephemeral: true
@@ -1173,7 +1237,7 @@ ${giftText}`
 		  .setColor(0xFFD700);
 
 		await channel.send({
-		  content: `<@&${STAFF_ROLE_ID}> <@&${COMPANION_ROLE_ID}>`,
+		  content: `<@&${STAFF_ROLE_ID}>`,
 		  embeds: [embed],
 		  components: [row]
 		});
