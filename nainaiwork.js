@@ -46,9 +46,9 @@ const db = getDatabase(app);
 
 // ===== 設定 =====
 const GUILD_ID = "1488912636040052869"; //機器人操作的伺服器id
-const RATING_CHANNEL_ID = "1491428115258282205";//初始工單頻道
+const RATING_CHANNEL_ID = "1489186836579356702";//評價
 const GIFT_LOG_CHANNEL_ID = "1492207255808901331";//禮物播報頻道ID
-const FEEDBACK_CHANNEL_ID = "1489186836579356702";//評價回饋頻道id
+const FEEDBACK_CHANNEL_ID = "1501066167316516915";//之後改成傳送關閉的工單紀錄!
 const OWNER_ROLE_ID = "1500107633900781649";//店長ID
 const STAFF_ROLE_ID = "1490342166910996510";//客服ID
 const COMPANION_ROLE_ID = "1491411801026330634";//陪陪ID
@@ -849,13 +849,13 @@ client.on(Events.InteractionCreate, async (i) => {
 				.setCustomId("gift_select_item")
 				.setPlaceholder("🎁 選擇想要送的禮物")
 				.addOptions([
-				  { label: "33", value: "布丁【33元】" },
-				  { label: "100", value: "棉花糖【100元】" },
-				  { label: "250", value: "仙女棒【250元】" },
-				  { label: "365", value: "鹹酥雞【365元】" },
-				  { label: "499", value: "好寶寶印章【499元】" },
-				  { label: "888", value: "麻將發大財【888元】" },
-				  { label: "1314", value: "鑽戒【1314元】" }
+				  { label: "布丁", value: "33" },
+				  { label: "棉花糖", value: "100" },
+				  { label: "仙女棒", value: "250" },
+				  { label: "鹹酥雞", value: "365" },
+				  { label: "好寶寶印章", value: "499" },
+				  { label: "麻將發大財", value: "888" },
+				  { label: "鑽戒", value: "1314" }
 				])
 			);
 			await i.guild.members.fetch();
