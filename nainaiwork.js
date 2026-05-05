@@ -46,7 +46,7 @@ const db = getDatabase(app);
 
 // ===== 設定 =====
 const GUILD_ID = "1488912636040052869";
-const SERVICE_ROLE_ID = "1490342166910996510";//老闆身分組
+const SERVICE_ROLE_ID = "1500107633900781649";//老闆身分組
 const RATING_CHANNEL_ID = "1489186836579356702";//初始工單頻道
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds,GatewayIntentBits.GuildMembers] });
