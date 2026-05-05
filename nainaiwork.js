@@ -863,13 +863,22 @@ client.on(Events.InteractionCreate, async (i) => {
 			  hasRole(m, [STAFF_ROLE_ID, COMPANION_ROLE_ID])
 			);
 
+			if (bossMembers.size === 0) {
+			  return i.reply({
+				content: "❌ 目前沒有可選擇的陪陪",
+				ephemeral: true
+			  });
+			}
+
 			const bossMenu = new ActionRowBuilder().addComponents(
 			  new StringSelectMenuBuilder()
 				.setCustomId("gift_select_boss")
 				.setPlaceholder("👤 選擇要送的陪陪")
 				.addOptions(
 				  bossMembers.map(m => ({
-					label: m.displayName,
+					label: (m.displayName || "未知陪陪")
+					  .replace(/\n/g, " ")
+					  .slice(0, 100),
 					value: m.id
 				  }))
 				)
