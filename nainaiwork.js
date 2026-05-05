@@ -8,4 +8,4 @@ client.once("ready", () => {
   console.log(`Bot 上線: ${client.user.tag}`);
 });
 
-client.login("process.env.TOKEN");
+client.login(process.env.TOKEN);
