@@ -473,32 +473,35 @@ client.on("interactionCreate", async (interaction) => {
 		.setColor(0x3399ff) // 藍色條
 		.setDescription(
 	`🎀✨【下單區｜開始你的專屬時光】✨🎀
+	
 	☃︎歡迎來到奈奈的下單區(｡•ᴗ•｡)♡
 	想找人陪你玩、聊天或放鬆一下嗎？
 	點擊下方按鈕，就可以開始你的專屬時光啦❄︎`
 		);
 
-	  const row = new ActionRowBuilder().addComponents(
-		new ButtonBuilder()
-		  .setCustomId("order_game")
-		  .setLabel("🎮 遊戲訂單")
-		  .setStyle(ButtonStyle.Primary),
+	  const row1 = new ActionRowBuilder().addComponents(
+	  new ButtonBuilder()
+		.setCustomId("order_game")
+		.setLabel("🎮 遊戲訂單")
+		.setStyle(ButtonStyle.Secondary),
 
-		new ButtonBuilder()
-		  .setCustomId("order_voice")
-		  .setLabel("🎧 語音訂單")
-		  .setStyle(ButtonStyle.Primary),
+	  new ButtonBuilder()
+		.setCustomId("order_voice")
+		.setLabel("🎧 語音訂單")
+		.setStyle(ButtonStyle.Secondary)
+	);
 
-		new ButtonBuilder()
-		  .setCustomId("order_boost")
-		  .setLabel("⚔️ 代打訂單")
-		  .setStyle(ButtonStyle.Primary),
+	const row2 = new ActionRowBuilder().addComponents(
+	  new ButtonBuilder()
+		.setCustomId("order_boost")
+		.setLabel("⚔️ 代打訂單")
+		.setStyle(ButtonStyle.Secondary),
 
-		new ButtonBuilder()
-		  .setCustomId("order_gift")
-		  .setLabel("🎁 送禮物")
-		  .setStyle(ButtonStyle.Primary)
-	  );
+	  new ButtonBuilder()
+		.setCustomId("order_gift")
+		.setLabel("🎁 贈送禮物")
+		.setStyle(ButtonStyle.Secondary)
+	);
 
 	  return interaction.reply({
 		embeds: [embed],
@@ -508,9 +511,9 @@ client.on("interactionCreate", async (interaction) => {
 
   } catch (err) {
     return interaction.reply({
-      content: `❌ ${err.message}`,
-      ephemeral: true
-    });
+	  embeds: [embed],
+	  components: [row1, row2]
+	});
   }
 });
 
