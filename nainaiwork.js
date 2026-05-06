@@ -27,35 +27,65 @@ admin.initializeApp({
 
 const db = admin.database();
 
-// ===== 指令註冊（只跑一次）=====
+// ===== 指令註冊 =====
 async function registerCommands(client) {
   const commands = [
+
     new SlashCommandBuilder()
       .setName("addpoint")
       .setDescription("加值點數")
-      .addUserOption(o => o.setName("user").setRequired(true))
-      .addIntegerOption(o => o.setName("amount").setRequired(true)),
+      .addUserOption(o =>
+        o.setName("user")
+         .setDescription("選擇玩家")
+         .setRequired(true)
+      )
+      .addIntegerOption(o =>
+        o.setName("amount")
+         .setDescription("點數")
+         .setRequired(true)
+      ),
 
     new SlashCommandBuilder()
       .setName("removepoint")
       .setDescription("扣除點數")
-      .addUserOption(o => o.setName("user").setRequired(true))
-      .addIntegerOption(o => o.setName("amount").setRequired(true)),
+      .addUserOption(o =>
+        o.setName("user")
+         .setDescription("選擇玩家")
+         .setRequired(true)
+      )
+      .addIntegerOption(o =>
+        o.setName("amount")
+         .setDescription("扣除點數")
+         .setRequired(true)
+      ),
 
     new SlashCommandBuilder()
       .setName("point")
       .setDescription("查詢點數")
-      .addUserOption(o => o.setName("user").setRequired(true)),
+      .addUserOption(o =>
+        o.setName("user")
+         .setDescription("查詢對象")
+         .setRequired(true)
+      ),
 
     new SlashCommandBuilder()
       .setName("totalpoint")
       .setDescription("查詢累積點數")
-      .addUserOption(o => o.setName("user").setRequired(true)),
+      .addUserOption(o =>
+        o.setName("user")
+         .setDescription("查詢對象")
+         .setRequired(true)
+      ),
 
     new SlashCommandBuilder()
       .setName("cleartotal")
       .setDescription("清除累積點數")
-      .addUserOption(o => o.setName("user").setRequired(true))
+      .addUserOption(o =>
+        o.setName("user")
+         .setDescription("目標玩家")
+         .setRequired(true)
+      )
+
   ].map(c => c.toJSON());
 
   const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
@@ -65,7 +95,7 @@ async function registerCommands(client) {
     { body: commands }
   );
 
-  console.log("✅ 指令已自動註冊");
+  console.log("✅ 指令已註冊");
 }
 
 // ===== 權限 =====
@@ -123,8 +153,7 @@ async function clearTotal(userId) {
 client.once("ready", async () => {
   console.log(`Bot 上線: ${client.user.tag}`);
 
-  // 👉 開機自動註冊（完成後可關掉）
-  await registerCommands(client);
+  await registerCommands(client); // 第一次開著
 });
 
 // ===== 指令處理 =====
@@ -145,16 +174,18 @@ client.on("interactionCreate", async (interaction) => {
 
       const { newBalance, newTotal } = await addPoint(user.id, amount);
 
-      const embed = new EmbedBuilder()
-        .setColor(0x00ff99)
-        .setAuthor({ name: `${user.username} 加值成功`, iconURL: user.displayAvatarURL() })
-        .addFields(
-          { name: "💰 加值", value: `+${amount}`, inline: true },
-          { name: "📊 餘額", value: `${newBalance}`, inline: true },
-          { name: "📈 累積", value: `${newTotal}`, inline: true }
-        );
-
-      return interaction.reply({ embeds: [embed] });
+      return interaction.reply({
+        embeds: [
+          new EmbedBuilder()
+            .setColor(0x00ff99)
+            .setAuthor({ name: `${user.username} 加值成功`, iconURL: user.displayAvatarURL() })
+            .addFields(
+              { name: "💰 加值", value: `+${amount}`, inline: true },
+              { name: "📊 餘額", value: `${newBalance}`, inline: true },
+              { name: "📈 累積", value: `${newTotal}`, inline: true }
+            )
+        ]
+      });
     }
 
     if (cmd === "removepoint") {
@@ -162,20 +193,21 @@ client.on("interactionCreate", async (interaction) => {
 
       const newBalance = await removePoint(user.id, amount);
 
-      const embed = new EmbedBuilder()
-        .setColor(0xff4444)
-        .setAuthor({ name: `${user.username} 扣款成功`, iconURL: user.displayAvatarURL() })
-        .addFields(
-          { name: "💸 扣款", value: `-${amount}`, inline: true },
-          { name: "📊 餘額", value: `${newBalance}`, inline: true }
-        );
-
-      return interaction.reply({ embeds: [embed] });
+      return interaction.reply({
+        embeds: [
+          new EmbedBuilder()
+            .setColor(0xff4444)
+            .setAuthor({ name: `${user.username} 扣款成功`, iconURL: user.displayAvatarURL() })
+            .addFields(
+              { name: "💸 扣款", value: `-${amount}`, inline: true },
+              { name: "📊 餘額", value: `${newBalance}`, inline: true }
+            )
+        ]
+      });
     }
 
     if (cmd === "point") {
       const data = await getUser(user.id);
-
       return interaction.reply({
         content: `💰 ${user.username} 點數：${data.balance}`,
         ephemeral: true
@@ -184,13 +216,11 @@ client.on("interactionCreate", async (interaction) => {
 
     if (cmd === "totalpoint") {
       const data = await getUser(user.id);
-
       return interaction.reply(`📈 累積點數：${data.total}`);
     }
 
     if (cmd === "cleartotal") {
       await clearTotal(user.id);
-
       return interaction.reply(`🧹 已清除累積點數`);
     }
 
