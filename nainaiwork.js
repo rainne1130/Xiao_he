@@ -235,7 +235,7 @@ async function clearTotal(userId) {
 client.once("ready", async () => {
   console.log(`Bot 上線: ${client.user.tag}`);
 
-  await registerCommands(client); // 第一次開著
+  //await registerCommands(client); // 第一次開著
 });
 
 // ===== 指令處理 =====
@@ -590,6 +590,26 @@ client.on("interactionCreate", async (interaction) => {
 
 		  return interaction.showModal(modal);
 		}
+		
+		if (interaction.customId === "order_boost") {
+
+		  const modal = new ModalBuilder()
+			.setCustomId("modal_boost_order")
+			.setTitle("⚔️ 代打訂單");
+
+		  const input1 = new TextInputBuilder()
+			.setCustomId("rank")
+			.setLabel("段位需求")
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder("金3-白1")
+			.setRequired(true);
+
+		  modal.addComponents(
+			new ActionRowBuilder().addComponents(input1)
+		  );
+
+		  return interaction.showModal(modal);
+		}
 	}
 		
 	// ===== Modal 提交 =====
@@ -757,6 +777,87 @@ client.on("interactionCreate", async (interaction) => {
 
 		  return interaction.editReply({
 			content: `✅ 語音訂單已建立：${channel}`
+		  });
+		}
+		
+		if (interaction.customId === "modal_boost_order") {
+
+		  await interaction.deferReply({ ephemeral: true });
+
+		  const rank = interaction.fields.getTextInputValue("rank");
+
+		  // ===== 編號 =====
+		  const counterRef = db.ref("counters/boostOrder");
+		  const snap = await counterRef.once("value");
+		  let num = (snap.val() || 0) + 1;
+		  await counterRef.set(num);
+
+		  const code = String(num).padStart(4, "0");
+
+		  // ===== 建頻道 =====
+		  const channel = await interaction.guild.channels.create({
+			name: `代打訂單_${code}`,
+			type: ChannelType.GuildText,
+			parent: "1491428115258282205",
+			permissionOverwrites: [
+			  {
+				id: interaction.guild.roles.everyone.id,
+				deny: [PermissionFlagsBits.ViewChannel]
+			  },
+			  {
+				id: SERVICE_ROLE_ID,
+				allow: [
+				  PermissionFlagsBits.ViewChannel,
+				  PermissionFlagsBits.SendMessages
+				]
+			  },
+			  {
+				id: interaction.user.id,
+				allow: [
+				  PermissionFlagsBits.ViewChannel,
+				  PermissionFlagsBits.SendMessages
+				]
+			  },
+			  {
+				id: interaction.guild.members.me.id,
+				allow: [
+				  PermissionFlagsBits.ViewChannel,
+				  PermissionFlagsBits.SendMessages
+				]
+			  }
+			]
+		  });
+
+		  // ===== 通知 =====
+		  const embed = new EmbedBuilder()
+			.setColor(0xff9900)
+			.setTitle("✨叮咚!有新的代打訂單✨")
+			.setDescription(
+		`👤 下單闆闆：<@${interaction.user.id}>
+		🏆 段位需求：${rank}`
+			)
+			.setTimestamp();
+
+		  const row = new ActionRowBuilder().addComponents(
+			new ButtonBuilder()
+			  .setCustomId("create_voice")
+			  .setLabel("🔊 創建語音頻道")
+			  .setStyle(ButtonStyle.Secondary),
+
+			new ButtonBuilder()
+			  .setCustomId("finish_order")
+			  .setLabel("✅ 訂單結束")
+			  .setStyle(ButtonStyle.Danger)
+		  );
+
+		  await channel.send({
+			content: `<@&${SERVICE_ROLE_ID}>`,
+			embeds: [embed],
+			components: [row]
+		  });
+
+		  return interaction.editReply({
+			content: `✅ 代打訂單已建立：${channel}`
 		  });
 		}
 	}
