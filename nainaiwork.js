@@ -234,6 +234,36 @@ async function registerCommands(client) {
 			{ name: "💍 鑽戒", value: "鑽戒" }
 		  )
 	  ),
+	  
+	  new SlashCommandBuilder()
+	  .setName("playpay")
+	  .setNameLocalizations({
+		"zh-TW": "陪玩轉帳"
+	  })
+	  .setDescription("Play payment")
+	  .setDescriptionLocalizations({
+		"zh-TW": "💳 發送陪玩轉帳資訊"
+	  }),
+
+	new SlashCommandBuilder()
+	  .setName("boostpay")
+	  .setNameLocalizations({
+		"zh-TW": "代打轉帳"
+	  })
+	  .setDescription("Boost payment")
+	  .setDescriptionLocalizations({
+		"zh-TW": "🏦 發送代打轉帳資訊"
+	  }),
+
+	new SlashCommandBuilder()
+	  .setName("jkpay")
+	  .setNameLocalizations({
+		"zh-TW": "陪玩街口"
+	  })
+	  .setDescription("JKOPay")
+	  .setDescriptionLocalizations({
+		"zh-TW": "💰 發送街口付款資訊"
+	  }),
 
   ].map(c => c.toJSON());
 
@@ -419,7 +449,7 @@ async function generateTranscript(channel) {
 client.once("ready", async () => {
   console.log(`Bot 上線: ${client.user.tag}`);
 
-  //await registerCommands(client); // 第一次開著
+  await registerCommands(client); // 第一次開著
 });
 
 // ===== 指令處理 =====
@@ -431,7 +461,7 @@ client.on("interactionCreate", async (interaction) => {
 		const user = interaction.options.getUser("user");
 
 		// 權限
-		if (["addpoint", "removepoint", "cleartotal", "top", "gift"].includes(cmd)) {
+		if (["addpoint", "removepoint", "cleartotal", "top", "gift","playpay","boostpay","jkpay"].includes(cmd)) {
 		  if (!hasPermission(interaction.member)) {
 			return interaction.reply({
 			  content: "❌ 您沒有權限使用此功能",
@@ -776,6 +806,60 @@ client.on("interactionCreate", async (interaction) => {
 			  });
 			}
 			
+			if (cmd === "playpay") {
+
+			  const embed = new EmbedBuilder()
+				.setColor(0xFFD700)
+				.setDescription(
+			`💳 陪玩轉帳資訊
+
+			銀行代碼：053 台中銀行
+			帳號：110280040675`
+				)
+				.setTimestamp();
+
+			  return interaction.reply({
+				embeds: [embed]
+			  });
+			}
+			
+			if (cmd === "boostpay") {
+
+			  const embed = new EmbedBuilder()
+				.setColor(0xFFD700)
+				.setDescription(
+			`🏦 代打轉帳資訊
+
+			銀行代碼：013 國泰世華
+			帳號：699522139860`
+				)
+				.setTimestamp();
+
+			  return interaction.reply({
+				embeds: [embed]
+			  });
+			}
+			
+			if (cmd === "jkpay") {
+
+			  const embed = new EmbedBuilder()
+				.setColor(0xFFD700)
+				.setDescription(
+			`💰 陪玩街口付款資訊
+
+			街口帳戶396
+			帳號：911279573
+
+			也可以點擊下方連結轉帳給我！
+
+			https://service.jkopay.com/r/transfer?j=Transfer:911279573`
+				)
+				.setTimestamp();
+
+			  return interaction.reply({
+				embeds: [embed]
+			  });
+			}
 		} catch (err) {
 			  console.error(err);
 
