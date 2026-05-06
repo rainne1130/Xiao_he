@@ -610,6 +610,93 @@ client.on("interactionCreate", async (interaction) => {
 
 		  return interaction.showModal(modal);
 		}
+		
+		if (interaction.customId === "create_voice") {
+
+		  if (!interaction.member.roles.cache.has(SERVICE_ROLE_ID)) {
+			return interaction.reply({
+			  content: "❌ 僅限服務人員可使用此按鈕",
+			  ephemeral: true
+			});
+		  }
+
+		  await interaction.deferReply({ ephemeral: true });
+
+		  try {
+
+			const textChannel = interaction.channel;
+
+			// ===== ② 取得工單創建人 =====
+			let ownerId = null;
+
+			const msg = await textChannel.messages.fetch({ limit: 10 });
+			const embedMsg = msg.find(m => m.embeds?.[0]?.description?.includes("下單闆闆"));
+
+			if (embedMsg) {
+			  const match = embedMsg.embeds[0].description.match(/<@(\d+)>/);
+			  if (match) ownerId = match[1];
+			}
+
+			if (!ownerId) ownerId = interaction.user.id;
+
+			// ===== ③ 抓使用者名稱 =====
+			const member = await interaction.guild.members.fetch(ownerId);
+			const username = member.user.username;
+
+			// ===== ④ 建立語音頻道 =====
+			const voice = await interaction.guild.channels.create({
+			  name: `語音_${username}`,
+			  type: ChannelType.GuildVoice,
+			  parent: "1493237762168721458",
+			  permissionOverwrites: [
+				{
+				  id: interaction.guild.roles.everyone.id,
+				  deny: [PermissionFlagsBits.ViewChannel]
+				},
+				{
+				  id: SERVICE_ROLE_ID,
+				  allow: [
+					PermissionFlagsBits.ViewChannel,
+					PermissionFlagsBits.Connect,
+					PermissionFlagsBits.Speak
+				  ]
+				},
+				{
+				  id: ownerId,
+				  allow: [
+					PermissionFlagsBits.ViewChannel,
+					PermissionFlagsBits.Connect,
+					PermissionFlagsBits.Speak
+				  ]
+				},
+				{
+				  id: interaction.guild.members.me.id,
+				  allow: [
+					PermissionFlagsBits.ViewChannel,
+					PermissionFlagsBits.Connect,
+					PermissionFlagsBits.Speak
+				  ]
+				}
+			  ]
+			});
+
+			// ===== 通知 =====
+			await textChannel.send({
+			  content: `🔊 語音頻道已建立：${voice}`
+			});
+
+			return interaction.editReply({
+			  content: `✅ 已建立語音頻道：${voice}`
+			});
+
+		  } catch (err) {
+			console.error(err);
+
+			return interaction.editReply({
+			  content: `❌ 建立失敗：${err.message}`
+			});
+		  }
+		}
 	}
 		
 	// ===== Modal 提交 =====
