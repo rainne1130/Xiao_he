@@ -921,7 +921,6 @@ client.on("interactionCreate", async (interaction) => {
 			  files: [filePath]
 			});
 
-			// 延遲刪本地檔
 			setTimeout(() => {
 			  fs.unlink(filePath, (err) => {
 				if (err) console.error("刪檔失敗:", err);
@@ -932,27 +931,52 @@ client.on("interactionCreate", async (interaction) => {
 			console.error("紀錄錯誤:", err);
 		  }
 
-		  // ===== 延遲 3 分鐘後刪語音 + 刪工單 =====
-		  const DELAY = 1000 * 60 * 3; // 3分鐘
+		  // ===== 延遲 3 分鐘 =====
+		  const DELAY = 1000 * 60 * 3;
 
 		  setTimeout(async () => {
 			try {
-			  // ===== 用「工單ID」找語音（穩定）=====
-			  const voiceName = `語音_${textChannel.id}`;
 
-			  const channels = await guild.channels.fetch();
+			  // ===== 抓工單創建人 =====
+			  let ownerId = null;
 
-			  const voiceChannel = channels.find(c =>
-				c.type === ChannelType.GuildVoice &&
-				c.name === voiceName &&
-				c.parentId === "1493237762168721458"
+			  const msgs = await textChannel.messages.fetch({ limit: 10 });
+
+			  const embedMsg = msgs.find(m =>
+				m.embeds?.[0]?.description?.includes("<@")
 			  );
 
-			  if (voiceChannel) {
-				await voiceChannel.delete().catch(() => {});
-				console.log("語音已刪除:", voiceName);
+			  if (embedMsg) {
+				const match = embedMsg.embeds[0].description.match(/<@(\d+)>/);
+				if (match) ownerId = match[1];
+			  }
+
+			  if (!ownerId) {
+				console.log("找不到玩家，略過語音刪除");
 			  } else {
-				console.log("未找到語音頻道:", voiceName);
+
+				const member = await guild.members.fetch(ownerId);
+
+				const safeName = member.user.username
+				  .replace(/\s+/g, "")
+				  .replace(/[^\u4e00-\u9fa5a-zA-Z0-9_]/g, "");
+
+				const voiceName = `語音_${safeName}`;
+
+				const channels = await guild.channels.fetch();
+
+				const voiceChannel = channels.find(c =>
+				  c.type === ChannelType.GuildVoice &&
+				  c.name === voiceName &&
+				  c.parentId === "1493237762168721458"
+				);
+
+				if (voiceChannel) {
+				  await voiceChannel.delete().catch(() => {});
+				  console.log("語音已刪除:", voiceName);
+				} else {
+				  console.log("未找到語音頻道:", voiceName);
+				}
 			  }
 
 			  // ===== 刪工單 =====
