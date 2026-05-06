@@ -700,15 +700,45 @@ client.on("interactionCreate", async (interaction) => {
 		
 		if (interaction.customId === "finish_order") {
 
-		  // ① 僅限身分組
 		  if (!interaction.member.roles.cache.has(SERVICE_ROLE_ID)) {
 			return interaction.reply({
-			  content: "❌ 僅限服務人員可操作",
+			  content: "❌ 僅限客服可操作",
 			  ephemeral: true
 			});
 		  }
 
-		  // ② 回覆評分 UI（所有人可點）
+		  try {
+			const textChannel = interaction.channel;
+
+			let ownerId = null;
+
+			const msgs = await textChannel.messages.fetch({ limit: 10 });
+			const embedMsg = msgs.find(m => m.embeds?.[0]?.description?.includes("下單闆闆"));
+
+			if (embedMsg) {
+			  const match = embedMsg.embeds[0].description.match(/<@(\d+)>/);
+			  if (match) ownerId = match[1];
+			}
+
+			if (ownerId) {
+			  const member = await interaction.guild.members.fetch(ownerId);
+			  const voiceName = `語音_${member.user.username}`;
+
+			  const voiceChannel = interaction.guild.channels.cache.find(c =>
+				c.type === ChannelType.GuildVoice &&
+				c.name === voiceName &&
+				c.parentId === "1493237762168721458"
+			  );
+
+			  if (voiceChannel) {
+				await voiceChannel.delete().catch(() => {});
+			  }
+			}
+
+		  } catch (err) {
+			console.error("刪語音頻道錯誤:", err);
+		  }
+
 		  const row = new ActionRowBuilder().addComponents(
 			new ButtonBuilder().setCustomId("rate_1").setLabel("⭐").setStyle(ButtonStyle.Secondary),
 			new ButtonBuilder().setCustomId("rate_2").setLabel("⭐⭐").setStyle(ButtonStyle.Secondary),
