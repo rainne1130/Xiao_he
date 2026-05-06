@@ -18,9 +18,11 @@ const client = new Client({
 });
 
 // ===== Firebase =====
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
 admin.initializeApp({
-  credential: admin.credential.applicationDefault(),
-  databaseURL:https://workingnai-default-rtdb.asia-southeast1.firebasedatabase.app
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://workingnai-default-rtdb.asia-southeast1.firebasedatabase.app"
 });
 
 const db = admin.database();
