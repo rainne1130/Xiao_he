@@ -20,7 +20,7 @@ const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://workingnai-default-rtdb.asia-southeast1.firebasedatabase.app"
+  databaseURL: "https://nai-working-money-default-rtdb.asia-southeast1.firebasedatabase.app/"
 });
 
 const db = admin.database();
@@ -229,6 +229,57 @@ async function removePoint(userId, amount) {
 // ===== 清除累積 =====
 async function clearTotal(userId) {
   await db.ref(`users/${userId}`).update({ total: 0 });
+}
+
+const fs = require("fs");
+const path = require("path");
+
+async function generateTranscript(channel) {
+  let messages = [];
+  let lastId;
+
+  while (true) {
+    const fetched = await channel.messages.fetch({
+      limit: 100,
+      before: lastId
+    });
+
+    if (fetched.size === 0) break;
+
+    messages = messages.concat(Array.from(fetched.values()));
+    lastId = fetched.last().id;
+  }
+
+  messages.reverse();
+
+  let html = `
+  <html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Transcript</title>
+  </head>
+  <body style="font-family: Arial; background:#2b2d31; color:white;">
+    <h2>📜 ${channel.name}</h2>
+    <hr/>
+  `;
+
+  for (const msg of messages) {
+    html += `
+      <div style="margin-bottom:10px;">
+        <b>${msg.author.username}</b>：
+        ${msg.content || "[Embed/Attachment]"}
+        <br/>
+        <small>${new Date(msg.createdTimestamp).toLocaleString()}</small>
+      </div>
+    `;
+  }
+
+  html += `</body></html>`;
+
+  const filePath = path.join(__dirname, `transcript-${channel.id}.html`);
+  fs.writeFileSync(filePath, html);
+
+  return filePath;
 }
 
 // ===== 上線 =====
@@ -705,6 +756,7 @@ client.on("interactionCreate", async (interaction) => {
 		
 		if (interaction.customId === "finish_order") {
 
+		  // ===== 權限 =====
 		  if (!interaction.member.roles.cache.has(SERVICE_ROLE_ID)) {
 			return interaction.reply({
 			  content: "❌ 僅限客服可操作",
@@ -712,38 +764,9 @@ client.on("interactionCreate", async (interaction) => {
 			});
 		  }
 
-		  try {
-			const textChannel = interaction.channel;
+		  const textChannel = interaction.channel;
 
-			let ownerId = null;
-
-			const msgs = await textChannel.messages.fetch({ limit: 10 });
-			const embedMsg = msgs.find(m => m.embeds?.[0]?.description?.includes("下單闆闆"));
-
-			if (embedMsg) {
-			  const match = embedMsg.embeds[0].description.match(/<@(\d+)>/);
-			  if (match) ownerId = match[1];
-			}
-
-			if (ownerId) {
-			  const member = await interaction.guild.members.fetch(ownerId);
-			  const voiceName = `語音_${member.user.username}`;
-
-			  const voiceChannel = interaction.guild.channels.cache.find(c =>
-				c.type === ChannelType.GuildVoice &&
-				c.name === voiceName &&
-				c.parentId === "1493237762168721458"
-			  );
-
-			  if (voiceChannel) {
-				await voiceChannel.delete().catch(() => {});
-			  }
-			}
-
-		  } catch (err) {
-			console.error("刪語音頻道錯誤:", err);
-		  }
-
+		  // ===== 評分按鈕（先準備）=====
 		  const row = new ActionRowBuilder().addComponents(
 			new ButtonBuilder().setCustomId("rate_1").setLabel("⭐").setStyle(ButtonStyle.Secondary),
 			new ButtonBuilder().setCustomId("rate_2").setLabel("⭐⭐").setStyle(ButtonStyle.Secondary),
@@ -752,10 +775,68 @@ client.on("interactionCreate", async (interaction) => {
 			new ButtonBuilder().setCustomId("rate_5").setLabel("⭐⭐⭐⭐⭐").setStyle(ButtonStyle.Success)
 		  );
 
-		  return interaction.reply({
+		  // ===== ⭐ 先回覆（避免 timeout）=====
+		  await interaction.reply({
 			content: "✨請為這次訂單做出評價✨",
 			components: [row]
 		  });
+
+		  // ===== 以下全部「背景執行」=====
+		  (async () => {
+
+			// ===== 1️⃣ 刪語音頻道 =====
+			try {
+			  let ownerId = null;
+
+			  const msgs = await textChannel.messages.fetch({ limit: 10 });
+			  const embedMsg = msgs.find(m => m.embeds?.[0]?.description?.includes("下單闆闆"));
+
+			  if (embedMsg) {
+				const match = embedMsg.embeds[0].description.match(/<@(\d+)>/);
+				if (match) ownerId = match[1];
+			  }
+
+			  if (ownerId) {
+				const member = await interaction.guild.members.fetch(ownerId);
+				const voiceName = `語音_${member.user.username}`;
+
+				const voiceChannel = interaction.guild.channels.cache.find(c =>
+				  c.type === ChannelType.GuildVoice &&
+				  c.name === voiceName &&
+				  c.parentId === "1493237762168721458"
+				);
+
+				if (voiceChannel) {
+				  await voiceChannel.delete().catch(() => {});
+				}
+			  }
+
+			} catch (err) {
+			  console.error("刪語音頻道錯誤:", err);
+			}
+
+			// ===== 2️⃣ 產生紀錄 =====
+			try {
+			  const filePath = await generateTranscript(textChannel);
+
+			  const isBoostOrder = textChannel.name.includes("代打訂單");
+
+			  const targetChannelId = isBoostOrder
+				? "1491426891754766466"
+				: "1490375081245933648";
+
+			  const logChannel = await interaction.guild.channels.fetch(targetChannelId);
+
+			  await logChannel.send({
+				content: `📜 工單紀錄：${textChannel.name}`,
+				files: [filePath]
+			  });
+
+			} catch (err) {
+			  console.error("紀錄產生錯誤:", err);
+			}
+
+		  })();
 		}
 		
 		if (interaction.customId.startsWith("rate_")) {
