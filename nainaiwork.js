@@ -671,37 +671,51 @@ client.on("interactionCreate", async (interaction) => {
 
 		  if (!interaction.member.roles.cache.has(SERVICE_ROLE_ID)) {
 			return interaction.reply({
-			  content: "❌ 僅限服務人員可使用此按鈕",
+			  content: "❌ 僅限客服可操作",
 			  ephemeral: true
 			});
 		  }
 
-		  await interaction.deferReply({ ephemeral: true });
+		  const textChannel = interaction.channel;
 
 		  try {
-
-			const textChannel = interaction.channel;
-
-			// ===== ② 取得工單創建人 =====
 			let ownerId = null;
 
-			const msg = await textChannel.messages.fetch({ limit: 10 });
-			const embedMsg = msg.find(m => m.embeds?.[0]?.description?.includes("下單闆闆"));
+			const msgs = await textChannel.messages.fetch({ limit: 10 });
+
+			const embedMsg = msgs.find(m =>
+			  m.embeds?.[0]?.description?.includes("<@")
+			);
 
 			if (embedMsg) {
 			  const match = embedMsg.embeds[0].description.match(/<@(\d+)>/);
 			  if (match) ownerId = match[1];
 			}
 
-			if (!ownerId) ownerId = interaction.user.id;
+			const member = await interaction.guild.members.fetch(ownerId || interaction.user.id);
 
-			// ===== ③ 抓使用者名稱 =====
-			const member = await interaction.guild.members.fetch(ownerId);
-			const username = member.user.username;
+			const safeName = member.user.username.replace(/\s+/g, "");
+			const voiceName = `語音_${safeName}`;
 
-			// ===== ④ 建立語音頻道 =====
-			const voice = await interaction.guild.channels.create({
-			  name: `語音_${username}`,
+			// ===== ❗防重複（關鍵）=====
+			const channels = await interaction.guild.channels.fetch();
+
+			const existing = channels.find(c =>
+			  c.type === ChannelType.GuildVoice &&
+			  c.name === voiceName &&
+			  c.parentId === "1493237762168721458"
+			);
+
+			if (existing) {
+			  return interaction.reply({
+				content: `❌ 語音頻道已存在：${existing}`,
+				ephemeral: true
+			  });
+			}
+
+			// ===== 建立語音 =====
+			const voiceChannel = await interaction.guild.channels.create({
+			  name: voiceName,
 			  type: ChannelType.GuildVoice,
 			  parent: "1493237762168721458",
 			  permissionOverwrites: [
@@ -713,43 +727,30 @@ client.on("interactionCreate", async (interaction) => {
 				  id: SERVICE_ROLE_ID,
 				  allow: [
 					PermissionFlagsBits.ViewChannel,
-					PermissionFlagsBits.Connect,
-					PermissionFlagsBits.Speak
+					PermissionFlagsBits.Connect
 				  ]
 				},
 				{
-				  id: ownerId,
+				  id: member.id,
 				  allow: [
 					PermissionFlagsBits.ViewChannel,
-					PermissionFlagsBits.Connect,
-					PermissionFlagsBits.Speak
-				  ]
-				},
-				{
-				  id: interaction.guild.members.me.id,
-				  allow: [
-					PermissionFlagsBits.ViewChannel,
-					PermissionFlagsBits.Connect,
-					PermissionFlagsBits.Speak
+					PermissionFlagsBits.Connect
 				  ]
 				}
 			  ]
 			});
 
-			// ===== 通知 =====
-			await textChannel.send({
-			  content: `🔊 語音頻道已建立：${voice}`
-			});
-
-			return interaction.editReply({
-			  content: `✅ 已建立語音頻道：${voice}`
+			return interaction.reply({
+			  content: `✅ 已建立語音頻道：${voiceChannel}`,
+			  ephemeral: true
 			});
 
 		  } catch (err) {
 			console.error(err);
 
-			return interaction.editReply({
-			  content: `❌ 建立失敗：${err.message}`
+			return interaction.reply({
+			  content: "❌ 建立語音失敗",
+			  ephemeral: true
 			});
 		  }
 		}
