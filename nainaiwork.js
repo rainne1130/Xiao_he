@@ -185,29 +185,54 @@ async function registerCommands(client) {
 		"zh-TW": "贈送禮物"
 	  })
 	  .setDescription("Send gift")
+	  .setDescriptionLocalizations({
+		"zh-TW": "🎁 發送專屬禮物給陪陪"
+	  })
+
 	  .addUserOption(o =>
 		o.setName("sender")
-		 .setDescription("送禮者")
-		 .setRequired(true)
+		  .setNameLocalizations({
+			"zh-TW": "送禮闆闆"
+		  })
+		  .setDescription("Gift sender")
+		  .setDescriptionLocalizations({
+			"zh-TW": "👤 選擇送禮的闆闆"
+		  })
+		  .setRequired(true)
 	  )
+
 	  .addStringOption(o =>
-	    o.setName("targets")
-	     .setDescription("請@多位陪陪")
-	     .setRequired(true)
+		o.setName("targets")
+		  .setNameLocalizations({
+			"zh-TW": "陪陪"
+		  })
+		  .setDescription("Mention companions")
+		  .setDescriptionLocalizations({
+			"zh-TW": "💝 @ 想送禮的陪陪（可多人）"
+		  })
+		  .setRequired(true)
 	  )
+
 	  .addStringOption(o =>
 		o.setName("gift")
-		 .setDescription("選擇禮物")
-		 .setRequired(true)
-		 .addChoices(
-		   { name: "布丁", value: "布丁" },
-		   { name: "棉花糖", value: "棉花糖" },
-		   { name: "仙女棒", value: "仙女棒" },
-		   { name: "鹹酥雞", value: "鹹酥雞" },
-		   { name: "好寶寶印章", value: "好寶寶印章" },
-		   { name: "麻將發大財", value: "麻將發大財" },
-		   { name: "鑽戒", value: "鑽戒" }
-		 )
+		  .setNameLocalizations({
+			"zh-TW": "禮物"
+		  })
+		  .setDescription("Select gift")
+		  .setDescriptionLocalizations({
+			"zh-TW": "🎀 選擇想贈送的禮物"
+		  })
+		  .setRequired(true)
+
+		  .addChoices(
+			{ name: "🍮 布丁", value: "布丁" },
+			{ name: "☁️ 棉花糖", value: "棉花糖" },
+			{ name: "✨ 仙女棒", value: "仙女棒" },
+			{ name: "🍗 鹹酥雞", value: "鹹酥雞" },
+			{ name: "✔️ 好寶寶印章", value: "好寶寶印章" },
+			{ name: "🀄 麻將發大財", value: "麻將發大財" },
+			{ name: "💍 鑽戒", value: "鑽戒" }
+		  )
 	  ),
 
   ].map(c => c.toJSON());
@@ -674,47 +699,58 @@ client.on("interactionCreate", async (interaction) => {
 			
 			if (cmd === "gift") {
 
+			  await interaction.deferReply({
+				ephemeral: true
+			  });
+
 			  const sender = interaction.options.getUser("sender");
-			  const targetsInput = interaction.options.getString("targets");
-			  const mentionMatches = targetsInput.match(/<@!?(\d+)>/g);
+
+			  const targetsInput =
+				interaction.options.getString("targets");
+
+			  const mentionMatches =
+				targetsInput.match(/<@!?(\d+)>/g);
 
 			  if (!mentionMatches) {
-				return interaction.reply({
-				  content: "❌ 請至少 @ 一位陪陪",
-				  ephemeral: true
+				return interaction.editReply({
+				  content: "❌ 請至少 @ 一位陪陪"
 				});
 			  }
 
-			  const giftName = interaction.options.getString("gift");
+			  const giftName =
+				interaction.options.getString("gift");
 
 			  const giftData = GIFTS[giftName];
 
 			  if (!giftData) {
-				return interaction.reply({
-				  content: "❌ 找不到禮物資料",
-				  ephemeral: true
+				return interaction.editReply({
+				  content: "❌ 找不到禮物資料"
 				});
 			  }
 
-			  const targetNames = [];
 			  const targetMentions = [];
 
-			  for (const mention of mentionMatches) {
+			  // ===== 平行處理（快很多）=====
+			  const members = await Promise.all(
+				mentionMatches.map(async (mention) => {
 
-				const id = mention.replace(/\D/g, "");
+				  const id = mention.replace(/\D/g, "");
 
-				const member = await interaction.guild.members
-				  .fetch(id)
-				  .catch(() => null);
+				  const member = await interaction.guild.members
+					.fetch(id)
+					.catch(() => null);
 
-				if (member) {
+				  if (!member) return null;
 
-				  targetNames.push(member.user.username);
-				  targetMentions.push(`<@${id}>`);
-				}
+				  return `<@${id}>`;
+				})
+			  );
+
+			  for (const m of members) {
+				if (m) targetMentions.push(m);
 			  }
 
-			  // ===== 禮物 UI =====
+			  // ===== Embed =====
 			  const embed = new EmbedBuilder()
 				.setColor(0xFFD700)
 				.setDescription(
@@ -727,17 +763,16 @@ client.on("interactionCreate", async (interaction) => {
 				.setImage(giftData.image)
 				.setTimestamp();
 
-			  // ===== 頻道 =====
-			  const channel = await interaction.guild.channels.fetch(GIFT_CHANNEL_ID);
+			  const channel =
+				await interaction.guild.channels.fetch(GIFT_CHANNEL_ID);
 
-			  // ===== 發送 =====
 			  await channel.send({
+				content: targetMentions.join(" "),
 				embeds: [embed]
 			  });
 
-			  return interaction.reply({
-				content: "✅ 禮物已送出",
-				ephemeral: true
+			  return interaction.editReply({
+				content: "✅ 禮物已送出"
 			  });
 			}
 			
