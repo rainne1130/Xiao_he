@@ -1,10 +1,6 @@
 const { 
-  Client, 
-  GatewayIntentBits, 
-  EmbedBuilder, 
-  REST, 
-  Routes, 
-  SlashCommandBuilder 
+  Client,ActionRowBuilder,ButtonBuilder,ButtonStyle,GatewayIntentBits,
+  EmbedBuilder,REST,Routes,SlashCommandBuilder
 } = require("discord.js");
 
 const admin = require("firebase-admin");
@@ -158,6 +154,16 @@ async function registerCommands(client) {
 	  .setDescription("View top total points ranking")
 	  .setDescriptionLocalizations({
 		"zh-TW": "🏆 查看累積點數前十排行榜"
+	  }),
+	  
+	new SlashCommandBuilder()
+	  .setName("menu")
+	  .setNameLocalizations({
+		"zh-TW": "下單面板"
+	  })
+	  .setDescription("Open order panel")
+	  .setDescriptionLocalizations({
+		"zh-TW": "🎀 開啟下單面板"
 	  })
 
   ].map(c => c.toJSON());
@@ -347,12 +353,7 @@ client.on("interactionCreate", async (interaction) => {
 
     if (cmd === "totalpoint") {
 
-	  if (user.id !== interaction.user.id) {
-		return interaction.reply({
-		  content: "❌ 只能查詢自己的累積點數",
-		  ephemeral: true
-		});
-	  }
+	  const user = interaction.user;
 
 	  const data = await getUser(user.id);
 
@@ -463,6 +464,45 @@ client.on("interactionCreate", async (interaction) => {
 	  return interaction.reply({
 		embeds: [embed],
 		ephemeral: true
+	  });
+	}
+	
+	if (cmd === "menu") {
+
+	  const embed = new EmbedBuilder()
+		.setColor(0x3399ff) // 藍色條
+		.setDescription(
+	`🎀✨【下單區｜開始你的專屬時光】✨🎀
+	☃︎歡迎來到奈奈的下單區(｡•ᴗ•｡)♡
+	想找人陪你玩、聊天或放鬆一下嗎？
+	點擊下方按鈕，就可以開始你的專屬時光啦❄︎`
+		);
+
+	  const row = new ActionRowBuilder().addComponents(
+		new ButtonBuilder()
+		  .setCustomId("order_game")
+		  .setLabel("🎮 遊戲訂單")
+		  .setStyle(ButtonStyle.Primary),
+
+		new ButtonBuilder()
+		  .setCustomId("order_voice")
+		  .setLabel("🎧 語音訂單")
+		  .setStyle(ButtonStyle.Primary),
+
+		new ButtonBuilder()
+		  .setCustomId("order_boost")
+		  .setLabel("⚔️ 代打訂單")
+		  .setStyle(ButtonStyle.Primary),
+
+		new ButtonBuilder()
+		  .setCustomId("order_gift")
+		  .setLabel("🎁 送禮物")
+		  .setStyle(ButtonStyle.Primary)
+	  );
+
+	  return interaction.reply({
+		embeds: [embed],
+		components: [row]
 	  });
 	}
 
