@@ -885,6 +885,7 @@ client.on("interactionCreate", async (interaction) => {
 
 			https://service.jkopay.com/r/transfer?j=Transfer:911279573`
 				)
+				.setImage("https://cdn.discordapp.com/attachments/1501066167316516915/1501656868357935115/IMG_0737.png?ex=69fcde70&is=69fb8cf0&hm=ba5a1adbbf7d3dcead2645fda0fbe499f13c5e9b4a14a7b3358a774e78def1ab")
 				.setTimestamp();
 
 			  return interaction.reply({
