@@ -540,9 +540,9 @@ client.on("interactionCreate", async (interaction) => {
 
 		const input4 = new TextInputBuilder()
 		.setCustomId("time")
-		.setLabel("下單時間（非必填）")
+		.setLabel("下單時間")
 		.setStyle(TextInputStyle.Short)
-		.setPlaceholder("1/1 13:00")
+		.setPlaceholder("1/1 13:00（非必填）")
 		.setRequired(false);
 
 		modal.addComponents(
@@ -553,6 +553,42 @@ client.on("interactionCreate", async (interaction) => {
 		);
 
 		return interaction.showModal(modal);
+		}
+		
+		if (interaction.customId === "order_voice") {
+
+		  const modal = new ModalBuilder()
+			.setCustomId("modal_voice_order")
+			.setTitle("🎧 語音訂單");
+
+		  const input1 = new TextInputBuilder()
+			.setCustomId("companion")
+			.setLabel("請選擇指定的陪陪")
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder("不指定 or 奈奈")
+			.setRequired(true);
+
+		  const input2 = new TextInputBuilder()
+			.setCustomId("type")
+			.setLabel("下單類型")
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder("唱歌－命運")
+			.setRequired(true);
+
+		  const input3 = new TextInputBuilder()
+			.setCustomId("time")
+			.setLabel("下單時間")
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder("1/1 13:00（非必填）")
+			.setRequired(false);
+
+		  modal.addComponents(
+			new ActionRowBuilder().addComponents(input1),
+			new ActionRowBuilder().addComponents(input2),
+			new ActionRowBuilder().addComponents(input3)
+		  );
+
+		  return interaction.showModal(modal);
 		}
 	}
 		
@@ -648,7 +684,81 @@ client.on("interactionCreate", async (interaction) => {
 			return interaction.editReply({
 			  content: `✅ 訂單已建立：${channel}`
 			});
-		  }
 		}
+		
+		if (interaction.customId === "modal_voice_order") {
+
+		  await interaction.deferReply({ ephemeral: true });
+
+		  const companion = interaction.fields.getTextInputValue("companion");
+		  const type = interaction.fields.getTextInputValue("type");
+		  const time = interaction.fields.getTextInputValue("time") || "未填寫";
+
+		  const counterRef = db.ref("counters/voiceOrder");
+		  const snap = await counterRef.once("value");
+		  let num = (snap.val() || 0) + 1;
+		  await counterRef.set(num);
+
+		  const code = String(num).padStart(4, "0");
+
+		  const channel = await interaction.guild.channels.create({
+			name: `語音訂單_${code}`,
+			type: ChannelType.GuildText,
+			parent: "1491428115258282205",
+			permissionOverwrites: [
+			  {
+				id: interaction.guild.roles.everyone.id,
+				deny: [PermissionFlagsBits.ViewChannel]
+			  },
+			  {
+				id: SERVICE_ROLE_ID,
+				allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+			  },
+			  {
+				id: interaction.user.id,
+				allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+			  },
+			  {
+				id: interaction.guild.members.me.id,
+				allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+			  }
+			]
+		  });
+
+		  // ===== 通知 =====
+		  const embed = new EmbedBuilder()
+			.setColor(0x9966ff)
+			.setTitle("✨叮咚!有新的語音訂單✨")
+			.setDescription(
+		`👤 下單闆闆：<@${interaction.user.id}>
+		📌 下單類型：${type}
+		👥 指定陪陪：${companion}
+		⏰ 預約時間：${time}`
+			)
+			.setTimestamp();
+
+		  const row = new ActionRowBuilder().addComponents(
+			new ButtonBuilder()
+			  .setCustomId("create_voice")
+			  .setLabel("🔊 創建語音頻道")
+			  .setStyle(ButtonStyle.Secondary),
+
+			new ButtonBuilder()
+			  .setCustomId("finish_order")
+			  .setLabel("✅ 訂單結束")
+			  .setStyle(ButtonStyle.Danger)
+		  );
+
+		  await channel.send({
+			content: `<@&${SERVICE_ROLE_ID}>`,
+			embeds: [embed],
+			components: [row]
+		  });
+
+		  return interaction.editReply({
+			content: `✅ 語音訂單已建立：${channel}`
+		  });
+		}
+	}
 });
 client.login(process.env.TOKEN);
