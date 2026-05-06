@@ -580,17 +580,37 @@ client.on("interactionCreate", async (interaction) => {
 			  type: ChannelType.GuildText,
 			  parent: "1491428115258282205",
 			  permissionOverwrites: [
+				// ❌ 預設所有人看不到
 				{
-				  id: interaction.guild.roles.everyone,
+				  id: interaction.guild.roles.everyone.id,
 				  deny: [PermissionFlagsBits.ViewChannel]
 				},
+
+				// ✅ 服務人員角色
 				{
 				  id: SERVICE_ROLE_ID,
-				  allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+				  allow: [
+					PermissionFlagsBits.ViewChannel,
+					PermissionFlagsBits.SendMessages
+				  ]
 				},
+
+				// ✅ 下單玩家
 				{
 				  id: interaction.user.id,
-				  allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+				  allow: [
+					PermissionFlagsBits.ViewChannel,
+					PermissionFlagsBits.SendMessages
+				  ]
+				},
+
+				// 🔥 Bot 自己
+				{
+				  id: interaction.guild.members.me.id,
+				  allow: [
+					PermissionFlagsBits.ViewChannel,
+					PermissionFlagsBits.SendMessages
+				  ]
 				}
 			  ]
 			});
