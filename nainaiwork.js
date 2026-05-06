@@ -697,6 +697,61 @@ client.on("interactionCreate", async (interaction) => {
 			});
 		  }
 		}
+		
+		if (interaction.customId === "finish_order") {
+
+		  // ① 僅限身分組
+		  if (!interaction.member.roles.cache.has(SERVICE_ROLE_ID)) {
+			return interaction.reply({
+			  content: "❌ 僅限服務人員可操作",
+			  ephemeral: true
+			});
+		  }
+
+		  // ② 回覆評分 UI（所有人可點）
+		  const row = new ActionRowBuilder().addComponents(
+			new ButtonBuilder().setCustomId("rate_1").setLabel("⭐").setStyle(ButtonStyle.Secondary),
+			new ButtonBuilder().setCustomId("rate_2").setLabel("⭐⭐").setStyle(ButtonStyle.Secondary),
+			new ButtonBuilder().setCustomId("rate_3").setLabel("⭐⭐⭐").setStyle(ButtonStyle.Secondary),
+			new ButtonBuilder().setCustomId("rate_4").setLabel("⭐⭐⭐⭐").setStyle(ButtonStyle.Secondary),
+			new ButtonBuilder().setCustomId("rate_5").setLabel("⭐⭐⭐⭐⭐").setStyle(ButtonStyle.Success)
+		  );
+
+		  return interaction.reply({
+			content: "✨請為這次訂單做出評價✨",
+			components: [row]
+		  });
+		}
+		
+		if (interaction.customId.startsWith("rate_")) {
+
+		  const stars = interaction.customId.split("_")[1];
+
+		  const modal = new ModalBuilder()
+			.setCustomId(`modal_rating_${stars}`)
+			.setTitle("📊 訂單評價");
+
+		  const input1 = new TextInputBuilder()
+			.setCustomId("companion")
+			.setLabel("陪陪名稱")
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder("奈奈")
+			.setRequired(true);
+
+		  const input2 = new TextInputBuilder()
+			.setCustomId("feedback")
+			.setLabel("評價內容")
+			.setStyle(TextInputStyle.Paragraph)
+			.setPlaceholder("請輸入您的回饋")
+			.setRequired(true);
+
+		  modal.addComponents(
+			new ActionRowBuilder().addComponents(input1),
+			new ActionRowBuilder().addComponents(input2)
+		  );
+
+		  return interaction.showModal(modal);
+		}
 	}
 		
 	// ===== Modal 提交 =====
@@ -946,6 +1001,68 @@ client.on("interactionCreate", async (interaction) => {
 		  return interaction.editReply({
 			content: `✅ 代打訂單已建立：${channel}`
 		  });
+		}
+		
+		if (interaction.customId.startsWith("modal_rating_")) {
+
+		  await interaction.deferReply({ ephemeral: true });
+
+		  try {
+
+			const stars = interaction.customId.split("_")[2];
+			const companion = interaction.fields.getTextInputValue("companion");
+			const feedback = interaction.fields.getTextInputValue("feedback");
+
+			// ===== 取得工單創建人 =====
+			const textChannel = interaction.channel;
+			let ownerId = interaction.user.id;
+
+			const msgs = await textChannel.messages.fetch({ limit: 10 });
+			const embedMsg = msgs.find(m => m.embeds?.[0]?.description?.includes("下單闆闆"));
+
+			if (embedMsg) {
+			  const match = embedMsg.embeds[0].description.match(/<@(\d+)>/);
+			  if (match) ownerId = match[1];
+			}
+
+			const member = await interaction.guild.members.fetch(ownerId);
+
+			// ===== 評價 UI =====
+			const embed = new EmbedBuilder()
+			  .setColor(0xFFD700) // 金色
+			  .setAuthor({
+				name: `⭐ ${stars} 星評價`,
+			  })
+			  .setThumbnail(member.user.displayAvatarURL()) // 右側頭像
+			  .addFields(
+				{ name: "👤 陪陪名稱", value: companion },
+				{ name: "⭐ 闆闆評分", value: `${"⭐".repeat(stars)}` },
+				{ name: "📝 訂單回饋", value: feedback }
+			  )
+			  .setFooter({
+				text: `評價人：${interaction.user.username}`,
+				iconURL: interaction.user.displayAvatarURL()
+			  })
+			  .setTimestamp();
+
+			// ===== 發送到評價頻道 =====
+			const reviewChannel = interaction.guild.channels.cache.get("1489186836579356702");
+
+			await reviewChannel.send({
+			  embeds: [embed]
+			});
+
+			return interaction.editReply({
+			  content: "✅ 評價已送出，感謝您的回饋！"
+			});
+
+		  } catch (err) {
+			console.error(err);
+
+			return interaction.editReply({
+			  content: `❌ 發生錯誤：${err.message}`
+			});
+		  }
 		}
 	}
 });
