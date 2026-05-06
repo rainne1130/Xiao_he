@@ -782,6 +782,34 @@ client.on("interactionCreate", async (interaction) => {
 
 		  return interaction.showModal(modal);
 		}
+		
+		if (interaction.customId === "order_gift") {
+
+		  const modal = new ModalBuilder()
+			.setCustomId("modal_gift_order")
+			.setTitle("🎁 贈送禮物");
+
+		  const input1 = new TextInputBuilder()
+			.setCustomId("companion")
+			.setLabel("請提供您想要送禮物的陪陪")
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder("奈奈")
+			.setRequired(true);
+
+		  const input2 = new TextInputBuilder()
+			.setCustomId("gift")
+			.setLabel("請輸入您想要贈送的禮物名稱")
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder("布丁")
+			.setRequired(true);
+
+		  modal.addComponents(
+			new ActionRowBuilder().addComponents(input1),
+			new ActionRowBuilder().addComponents(input2)
+		  );
+
+		  return interaction.showModal(modal);
+		}
 	}
 		
 	// ===== Modal 提交 =====
@@ -1093,6 +1121,86 @@ client.on("interactionCreate", async (interaction) => {
 			  content: `❌ 發生錯誤：${err.message}`
 			});
 		  }
+		}
+		
+		if (interaction.customId === "modal_gift_order") {
+
+		  await interaction.deferReply({ ephemeral: true });
+
+		  const companion = interaction.fields.getTextInputValue("companion");
+		  const gift = interaction.fields.getTextInputValue("gift");
+
+		  // ===== 編號 =====
+		  const counterRef = db.ref("counters/giftOrder");
+		  const snap = await counterRef.once("value");
+		  let num = (snap.val() || 0) + 1;
+		  await counterRef.set(num);
+
+		  const code = String(num).padStart(4, "0");
+
+		  // ===== 建立頻道 =====
+		  const channel = await interaction.guild.channels.create({
+			name: `禮物訂單_${code}`,
+			type: ChannelType.GuildText,
+			parent: "1491428115258282205",
+			permissionOverwrites: [
+			  {
+				id: interaction.guild.roles.everyone.id,
+				deny: [PermissionFlagsBits.ViewChannel]
+			  },
+			  {
+				id: SERVICE_ROLE_ID,
+				allow: [
+				  PermissionFlagsBits.ViewChannel,
+				  PermissionFlagsBits.SendMessages
+				]
+			  },
+			  {
+				id: interaction.user.id,
+				allow: [
+				  PermissionFlagsBits.ViewChannel,
+				  PermissionFlagsBits.SendMessages
+				]
+			  },
+			  {
+				id: interaction.guild.members.me.id,
+				allow: [
+				  PermissionFlagsBits.ViewChannel,
+				  PermissionFlagsBits.SendMessages
+				]
+			  }
+			]
+		  });
+
+		  // ===== UI =====
+		  const embed = new EmbedBuilder()
+			.setColor(0xFFD700) // 金色
+			.setTitle("🚀闆闆來送禮物囉🚀")
+			.setThumbnail(interaction.user.displayAvatarURL()) // 右側頭像
+			.addFields(
+			  { name: "👤 闆闆名稱", value: `<@${interaction.user.id}>` },
+			  { name: "🎀 陪陪名稱", value: companion },
+			  { name: "🎁 禮物名稱", value: gift }
+			)
+			.setTimestamp();
+
+		  const row = new ActionRowBuilder().addComponents(
+			new ButtonBuilder()
+			  .setCustomId("finish_order")
+			  .setLabel("✅ 訂單結束")
+			  .setStyle(ButtonStyle.Danger)
+		  );
+
+		  // ===== 發送通知 =====
+		  await channel.send({
+			content: `<@&${SERVICE_ROLE_ID}> <@${interaction.user.id}>`,
+			embeds: [embed],
+			components: [row]
+		  });
+
+		  return interaction.editReply({
+			content: `✅ 禮物訂單已建立：${channel}`
+		  });
 		}
 	}
 });
