@@ -814,10 +814,18 @@ client.on("interactionCreate", async (interaction) => {
 			.setStyle(TextInputStyle.Paragraph)
 			.setPlaceholder("請輸入您的回饋")
 			.setRequired(true);
+			
+		  const input3 = new TextInputBuilder()
+			  .setCustomId("anonymous")
+			  .setLabel("是否匿名評價？（是/否）")
+			  .setStyle(TextInputStyle.Short)
+			  .setPlaceholder("是 或 否")
+			  .setRequired(true);
 
 		  modal.addComponents(
 			new ActionRowBuilder().addComponents(input1),
-			new ActionRowBuilder().addComponents(input2)
+			new ActionRowBuilder().addComponents(input2),
+			new ActionRowBuilder().addComponents(input3)
 		  );
 
 		  return interaction.showModal(modal);
@@ -894,77 +902,67 @@ client.on("interactionCreate", async (interaction) => {
 		  });
 
 		  const textChannel = interaction.channel;
+		  const guild = interaction.guild;
 
-		  (async () => {
+		  // ===== 先做紀錄 =====
+		  try {
+			const filePath = await generateTranscript(textChannel);
 
-			// ===== 刪語音 =====
-			try {
-			  let ownerId = null;
+			const isBoostOrder = textChannel.name.includes("代打訂單");
 
-			  const msgs = await textChannel.messages.fetch({ limit: 10 });
-			  const embedMsg = msgs.find(m => m.embeds?.[0]?.description?.includes("下單闆闆"));
+			const targetChannelId = isBoostOrder
+			  ? "1491426891754766466"
+			  : "1490375081245933648";
 
-			  if (embedMsg) {
-				const match = embedMsg.embeds[0].description.match(/<@(\d+)>/);
-				if (match) ownerId = match[1];
-			  }
+			const logChannel = await guild.channels.fetch(targetChannelId);
 
-			  if (ownerId) {
-				const member = await interaction.guild.members.fetch(ownerId);
-				const safeName = member.user.username.replace(/\s+/g, "");
-				const voiceName = `語音_${safeName}`;
+			await logChannel.send({
+			  content: `📜 工單紀錄：${textChannel.name}`,
+			  files: [filePath]
+			});
 
-				const channels = await interaction.guild.channels.fetch();
-
-				const voiceChannel = channels.find(c =>
-				  c.type === ChannelType.GuildVoice &&
-				  c.name === voiceName &&
-				  c.parentId === "1493237762168721458"
-				);
-
-				if (voiceChannel) {
-				  await voiceChannel.delete().catch(() => {});
-				}
-			  }
-
-			} catch (err) {
-			  console.error("刪語音錯誤:", err);
-			}
-
-			// ===== 紀錄 =====
-			try {
-			  const filePath = await generateTranscript(textChannel);
-
-			  const isBoostOrder = textChannel.name.includes("代打訂單");
-
-			  const targetChannelId = isBoostOrder
-				? "1491426891754766466"
-				: "1490375081245933648";
-
-			  const logChannel = await interaction.guild.channels.fetch(targetChannelId);
-
-			  await logChannel.send({
-				content: `📜 工單紀錄：${textChannel.name}`,
-				files: [filePath]
-			  });
-
-			  setTimeout(() => {
-				fs.unlink(filePath, (err) => {
-				  if (err) console.error("刪檔失敗:", err);
-				});
-			  }, 5000);
-
-			} catch (err) {
-			  console.error("紀錄錯誤:", err);
-			}
-
-			// ===== 刪工單 =====
+			// 延遲刪本地檔
 			setTimeout(() => {
-			  textChannel.delete().catch(() => {});
-			  console.log("工單已刪除:", textChannel.name);
+			  fs.unlink(filePath, (err) => {
+				if (err) console.error("刪檔失敗:", err);
+			  });
 			}, 10000);
 
-		  })();
+		  } catch (err) {
+			console.error("紀錄錯誤:", err);
+		  }
+
+		  // ===== 延遲 3 分鐘後刪語音 + 刪工單 =====
+		  const DELAY = 1000 * 60 * 3; // 3分鐘
+
+		  setTimeout(async () => {
+			try {
+			  // ===== 用「工單ID」找語音（穩定）=====
+			  const voiceName = `語音_${textChannel.id}`;
+
+			  const channels = await guild.channels.fetch();
+
+			  const voiceChannel = channels.find(c =>
+				c.type === ChannelType.GuildVoice &&
+				c.name === voiceName &&
+				c.parentId === "1493237762168721458"
+			  );
+
+			  if (voiceChannel) {
+				await voiceChannel.delete().catch(() => {});
+				console.log("語音已刪除:", voiceName);
+			  } else {
+				console.log("未找到語音頻道:", voiceName);
+			  }
+
+			  // ===== 刪工單 =====
+			  await textChannel.delete().catch(() => {});
+			  console.log("工單已刪除:", textChannel.name);
+
+			} catch (err) {
+			  console.error("延遲刪除錯誤:", err);
+			}
+		  }, DELAY);
 		}
 	}
 		
@@ -1239,6 +1237,8 @@ client.on("interactionCreate", async (interaction) => {
 		  try {
 
 			const textChannel = interaction.channel;
+
+			// ===== 防重複 =====
 			const ratedRef = db.ref(`ratings/${textChannel.id}/${interaction.user.id}`);
 			const snap = await ratedRef.once("value");
 
@@ -1251,6 +1251,12 @@ client.on("interactionCreate", async (interaction) => {
 			const stars = interaction.customId.split("_")[2];
 			const companion = interaction.fields.getTextInputValue("companion");
 			const feedback = interaction.fields.getTextInputValue("feedback");
+
+			const anonymousInput = interaction.fields.getTextInputValue("anonymous");
+
+			const isAnonymous = ["是", "yes", "y", "1"].includes(
+			  anonymousInput.trim().toLowerCase()
+			);
 
 			// ===== 取得工單創建人 =====
 			let ownerId = interaction.user.id;
@@ -1281,8 +1287,12 @@ client.on("interactionCreate", async (interaction) => {
 				{ name: "📝 訂單回饋", value: feedback }
 			  )
 			  .setFooter({
-				text: `評價人：${interaction.user.username}`,
-				iconURL: interaction.user.displayAvatarURL()
+				text: isAnonymous
+				  ? "評價人：匿名闆闆"
+				  : `評價人：${interaction.user.username}`,
+				iconURL: isAnonymous
+				  ? null
+				  : interaction.user.displayAvatarURL()
 			  })
 			  .setTimestamp();
 
@@ -1292,6 +1302,7 @@ client.on("interactionCreate", async (interaction) => {
 			  embeds: [embed]
 			});
 
+			// ===== 記錄已評價 =====
 			await ratedRef.set(true);
 
 			return interaction.editReply({
