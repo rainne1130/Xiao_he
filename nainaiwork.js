@@ -801,7 +801,7 @@ client.on("interactionCreate", async (interaction) => {
 			  // ===== 顯示名稱 =====
 			  const senderDisplay = anonymous
 				? "匿名闆闆"
-				: sender.username;
+				: `<@${sender.id}>`;
 
 			  // ===== Embed =====
 			  const embed = new EmbedBuilder()
