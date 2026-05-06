@@ -32,11 +32,11 @@ async function registerCommands(client) {
     new SlashCommandBuilder()
 	  .setName("addpoint")
 	  .setNameLocalizations({
-		"zh-TW": "儲值點數"
+		"zh-TW": "儲值q幣"
 	  })
 	  .setDescription("Add points to a user")
 	  .setDescriptionLocalizations({
-		"zh-TW": "💰 為指定玩家增加點數"
+		"zh-TW": "💰 為指定闆闆增加q幣"
 	  })
 	  .addUserOption(o =>
 		o.setName("user")
@@ -52,11 +52,11 @@ async function registerCommands(client) {
 	  .addIntegerOption(o =>
 		o.setName("amount")
 		 .setNameLocalizations({
-		   "zh-TW": "增加點數"
+		   "zh-TW": "增加q幣"
 		 })
 		 .setDescription("Amount of points")
 		 .setDescriptionLocalizations({
-		   "zh-TW": "💵 輸入要增加的點數"
+		   "zh-TW": "💵 輸入要增加的q幣"
 		 })
 		 .setMinValue(1)
 		 .setRequired(true)
@@ -65,11 +65,11 @@ async function registerCommands(client) {
     new SlashCommandBuilder()
 	  .setName("removepoint")
 	  .setNameLocalizations({
-		"zh-TW": "扣除點數"
+		"zh-TW": "扣除q幣"
 	  })
 	  .setDescription("Remove points from a user")
 	  .setDescriptionLocalizations({
-		"zh-TW": "💸 扣除指定闆闆的點數"
+		"zh-TW": "💸 扣除指定闆闆的q幣"
 	  })
 	  .addUserOption(o =>
 		o.setName("user")
@@ -85,11 +85,11 @@ async function registerCommands(client) {
 	  .addIntegerOption(o =>
 		o.setName("amount")
 		 .setNameLocalizations({
-		   "zh-TW": "扣除點數"
+		   "zh-TW": "扣除q幣"
 		 })
 		 .setDescription("Amount to remove")
 		 .setDescriptionLocalizations({
-		   "zh-TW": "💵 輸入要扣除的點數"
+		   "zh-TW": "💵 輸入要扣除的q幣"
 		 })
 		 .setMinValue(1)
 		 .setMaxValue(1000000)
@@ -99,11 +99,11 @@ async function registerCommands(client) {
     new SlashCommandBuilder()
 	  .setName("point")
 	  .setNameLocalizations({
-		"zh-TW": "查詢點數餘額"
+		"zh-TW": "查詢q幣餘額"
 	  })
 	  .setDescription("Check your balance")
 	  .setDescriptionLocalizations({
-		"zh-TW": "📊 查詢自己的點數餘額"
+		"zh-TW": "📊 查詢自己的q幣餘額"
 	  })
 	  .addUserOption(o =>
 		o.setName("user")
@@ -124,8 +124,19 @@ async function registerCommands(client) {
 	  })
 	  .setDescription("Check total points")
 	  .setDescriptionLocalizations({
-		"zh-TW": "📈 查詢自己的累積點數"
-	  }),
+		"zh-TW": "📈 查詢累積q幣"
+	  })
+	  .addUserOption(o =>
+		o.setName("user")
+		 .setNameLocalizations({
+		   "zh-TW": "闆闆"
+		 })
+		 .setDescription("Target user")
+		 .setDescriptionLocalizations({
+		   "zh-TW": "👤 選擇查詢對象"
+		 })
+		 .setRequired(false)
+	  ),
 
     new SlashCommandBuilder()
 	  .setName("cleartotal")
@@ -134,7 +145,7 @@ async function registerCommands(client) {
 	  })
 	  .setDescription("Reset user's total points")
 	  .setDescriptionLocalizations({
-		"zh-TW": "🧹 清除指定闆闆的累積點數"
+		"zh-TW": "🧹 清除指定闆闆的累積q幣"
 	  })
 	  .addUserOption(o =>
 		o.setName("user")
@@ -151,11 +162,11 @@ async function registerCommands(client) {
 	new SlashCommandBuilder()
 	  .setName("top")
 	  .setNameLocalizations({
-		"zh-TW": "累積點數排行"
+		"zh-TW": "累積q幣排行"
 	  })
 	  .setDescription("View top total points ranking")
 	  .setDescriptionLocalizations({
-		"zh-TW": "🏆 查看累積點數前十排行榜"
+		"zh-TW": "🏆 查看累積q幣前十排行榜"
 	  }),
 	  
 	new SlashCommandBuilder()
@@ -166,7 +177,38 @@ async function registerCommands(client) {
 	  .setDescription("Open order panel")
 	  .setDescriptionLocalizations({
 		"zh-TW": "🎀 開啟下單面板"
+	  }),
+	  
+	new SlashCommandBuilder()
+	  .setName("gift")
+	  .setNameLocalizations({
+		"zh-TW": "贈送禮物"
 	  })
+	  .setDescription("Send gift")
+	  .addUserOption(o =>
+		o.setName("sender")
+		 .setDescription("送禮者")
+		 .setRequired(true)
+	  )
+	  .addUserOption(o =>
+		o.setName("target")
+		 .setDescription("接收者")
+		 .setRequired(true)
+	  )
+	  .addStringOption(o =>
+		o.setName("gift")
+		 .setDescription("選擇禮物")
+		 .setRequired(true)
+		 .addChoices(
+		   { name: "布丁", value: "布丁" },
+		   { name: "棉花糖", value: "棉花糖" },
+		   { name: "仙女棒", value: "仙女棒" },
+		   { name: "鹹酥雞", value: "鹹酥雞" },
+		   { name: "好寶寶印章", value: "好寶寶印章" },
+		   { name: "麻將發大財", value: "麻將發大財" },
+		   { name: "鑽戒", value: "鑽戒" }
+		 )
+	  ),
 
   ].map(c => c.toJSON());
 
@@ -231,6 +273,72 @@ async function clearTotal(userId) {
   await db.ref(`users/${userId}`).update({ total: 0 });
 }
 
+const GIFT_CHANNEL_ID = "1492207255808901331"; //禮物頻道id
+
+const GIFTS = {
+  "布丁": {
+    image: "https://cdn.discordapp.com/attachments/1492442980320022638/1492442980571807784/103.png?ex=69fc4ed6&is=69fafd56&hm=84e2c0cf46c1148e6af04794377817b8933f6ec75dbb8e493d6a4cac9847e185&",
+    text:
+`今天的你甜度超標♡
+像布丁一樣軟軟嫩嫩又療癒
+
+陪陪再累也要記得微笑哦(๑˃ᴗ˂)ﻭ
+闆闆送你一點甜，讓心情也變好`
+  },
+
+  "棉花糖": {
+    image: "https://cdn.discordapp.com/attachments/1492444674567311491/1492444674835611679/1f62b65266fca8b6.png?ex=69fc506a&is=69fafeea&hm=7c74bcca5a6516bbd1db96f1319fe083a19250b31c0a41dd27be29bdb9f6afdb",
+    text:
+`今天走一個軟萌路線♡
+像棉花糖一樣輕飄飄又可愛讓人忍不住想靠近一點點☁️
+闆闆表示：你真的太Qㄌ！`
+  },
+
+  "仙女棒": {
+    image: "https://cdn.discordapp.com/attachments/1492795335138086963/1492795335418974218/d9cf7bd08fa66d0d.png?ex=69fc457e&is=69faf3fe&hm=237c2c5f899474117b99889d2c2a3fb92cf4223a4da2041b658d519c5f7f9ecf&",
+    text:
+`閃閃發光的就是你✨
+像仙女棒一樣照亮整個夜晚 每一刻都在發光發熱(๑•̀ㅂ•́)و✧
+今天也要當最亮的那顆星！`
+  },
+
+  "鹹酥雞": {
+    image: "https://cdn.discordapp.com/attachments/1493647304849232084/1493647305533030683/598bd4342f6472a6.png?ex=69fc1334&is=69fac1b4&hm=ded0b14abe2b40bb37eb338f7fcb1a565f1b5a905db1fc0805d9aaddcf3b314d&",
+    text:
+`努力工作也要補充快樂😋
+鹹酥雞就是今天的幸福來源
+陪玩結束一起吃最對味🍗
+老闆懂你，快樂不能少！`
+  },
+
+  "好寶寶印章": {
+    image: "https://cdn.discordapp.com/attachments/1495751697438478466/1495751698050842655/177.png?ex=69fc7ad2&is=69fb2952&hm=8317f494f539ef8b60a00fe042caed452ac3f57de3d98ea5ab4987bc58eade3a&",
+    text:
+`今天表現超優秀✔️
+乖乖上班還這麼可愛💖
+直接蓋一個好寶寶認證章！
+老闆：值得被誇獎一整天✨`
+  },
+
+  "麻將發大財": {
+    image: "https://cdn.discordapp.com/attachments/1495751982642892962/1495751983984935082/189.png?ex=69fc7b16&is=69fb2996&hm=dc9dd460b7adcf05867944a479604ca2e3b63d7808417b37cdd5289755650630&",
+    text:
+`今天財運直接拉滿💰
+不管做什麼都順順順！
+陪玩也能一路發發發✨
+老闆祝你直接胡一把大的！`
+  },
+
+  "鑽戒": {
+    image: "https://cdn.discordapp.com/attachments/1497475411771265084/1497475412006277241/197.png?ex=69fc28a7&is=69fad727&hm=bd2585f0a4c574b6955c747675c401eb218016980ca2b9b6aea1e77b6bfb7b93&",
+    text:
+`今天被寵愛的就是你💖
+像鑽戒一樣閃耀又珍貴
+每一分努力都值得被看見✨
+老闆：你真的很重要！`
+  }
+};
+
 const fs = require("fs");
 const path = require("path");
 
@@ -286,7 +394,7 @@ async function generateTranscript(channel) {
 client.once("ready", async () => {
   console.log(`Bot 上線: ${client.user.tag}`);
 
-  //await registerCommands(client); // 第一次開著
+  await registerCommands(client); // 第一次開著
 });
 
 // ===== 指令處理 =====
@@ -298,7 +406,7 @@ client.on("interactionCreate", async (interaction) => {
 		const user = interaction.options.getUser("user");
 
 		// 權限
-		if (["addpoint", "removepoint", "cleartotal", "top"].includes(cmd)) {
+		if (["addpoint", "removepoint", "cleartotal", "top", "gift"].includes(cmd)) {
 		  if (!hasPermission(interaction.member)) {
 			return interaction.reply({
 			  content: "❌ 您沒有權限使用此功能",
@@ -317,7 +425,7 @@ client.on("interactionCreate", async (interaction) => {
 
 			  const embed = new EmbedBuilder()
 				.setColor(0x00ff99)
-				.setTitle("💳 點數異動通知")
+				.setTitle("💳 q幣異動通知")
 				.setAuthor({
 				  name: `${user.username} 加值成功`
 				})
@@ -325,7 +433,7 @@ client.on("interactionCreate", async (interaction) => {
 				.addFields(
 				  { name: "💰 加值金額", value: `+${amount.toLocaleString()}`, inline: true },
 				  { name: "📊 目前餘額", value: `${newBalance.toLocaleString()}`, inline: true },
-				  { name: "📈 累積點數", value: `${newTotal.toLocaleString()}`, inline: true }
+				  { name: "📈 累積q幣", value: `${newTotal.toLocaleString()}`, inline: true }
 				)
 				.setFooter({
 				  text: `操作人：${interaction.user.displayName ?? interaction.user.username}`,
@@ -345,7 +453,7 @@ client.on("interactionCreate", async (interaction) => {
 
 			  const embed = new EmbedBuilder()
 				.setColor(0xff4444)
-				.setTitle("💳 點數異動通知")
+				.setTitle("💳 q幣異動通知")
 				.setAuthor({
 				  name: `${user.username} 扣款成功`
 				})
@@ -367,10 +475,13 @@ client.on("interactionCreate", async (interaction) => {
 
 			if (cmd === "point") {
 
-			  // ❌ 禁止查別人
-			  if (user.id !== interaction.user.id) {
+			  // ❌ 非客服不能查別人
+			  if (
+				user.id !== interaction.user.id &&
+				!hasPermission(interaction.member)
+			  ) {
 				return interaction.reply({
-				  content: "❌ 只能查詢自己的點數",
+				  content: "❌ 只能查詢自己的q幣",
 				  ephemeral: true
 				});
 			  }
@@ -379,9 +490,9 @@ client.on("interactionCreate", async (interaction) => {
 
 			  const embed = new EmbedBuilder()
 				.setColor(0x3399ff)
-				.setTitle("📊 點數查詢")
+				.setTitle("📊 q幣查詢")
 				.setAuthor({
-				  name: `${user.username} 點數資訊`
+				  name: `${user.username} q幣資訊`
 				})
 				.setThumbnail(user.displayAvatarURL())
 				.addFields(
@@ -401,19 +512,31 @@ client.on("interactionCreate", async (interaction) => {
 
 			if (cmd === "totalpoint") {
 
-			  const user = interaction.user;
+			  const targetUser =
+				interaction.options.getUser("user") || interaction.user;
 
-			  const data = await getUser(user.id);
+			  // ❌ 非客服不能查別人
+			  if (
+				targetUser.id !== interaction.user.id &&
+				!hasPermission(interaction.member)
+			  ) {
+				return interaction.reply({
+				  content: "❌ 只能查詢自己的累積q幣",
+				  ephemeral: true
+				});
+			  }
+
+			  const data = await getUser(targetUser.id);
 
 			  const embed = new EmbedBuilder()
 				.setColor(0x9966ff)
-				.setTitle("📈 累積點數查詢")
+				.setTitle("📈 累積q幣查詢")
 				.setAuthor({
-				  name: `${user.username} 累積資訊`
+				  name: `${targetUser.username} 累積資訊`
 				})
-				.setThumbnail(user.displayAvatarURL())
+				.setThumbnail(targetUser.displayAvatarURL())
 				.addFields(
-				  { name: "📈 總累積點數", value: `${data.total.toLocaleString()}` }
+				  { name: "📈 總累積q幣", value: `${data.total.toLocaleString()}` }
 				)
 				.setFooter({
 				  text: `查詢者：${interaction.user.displayName ?? interaction.user.username}`,
@@ -439,7 +562,7 @@ client.on("interactionCreate", async (interaction) => {
 				})
 				.setThumbnail(user.displayAvatarURL())
 				.addFields(
-				  { name: "📈 累積點數", value: "已重置為 0" }
+				  { name: "📈 累積q幣", value: "已重置為 0" }
 				)
 				.setFooter({
 				  text: `操作人：${interaction.user.displayName ?? interaction.user.username}`,
@@ -492,7 +615,7 @@ client.on("interactionCreate", async (interaction) => {
 
 			  const embed = new EmbedBuilder()
 				.setColor(0xFFD700)
-				.setTitle("🏆 累積點數排行 TOP 10")
+				.setTitle("🏆 累積q幣排行 TOP 10")
 				.setDescription(lines.join("\n"))
 				.setTimestamp();
 
@@ -548,6 +671,42 @@ client.on("interactionCreate", async (interaction) => {
 				components: [row1, row2]
 			  });
 			}
+			
+			if (cmd === "gift") {
+
+			  const sender = interaction.options.getUser("sender");
+			  const target = interaction.options.getUser("target");
+			  const giftName = interaction.options.getString("gift");
+
+			  const giftData = GIFTS[giftName];
+
+			  if (!giftData) {
+				return interaction.reply({
+				  content: "❌ 找不到禮物資料",
+				  ephemeral: true
+				});
+			  }
+
+			  const embed = new EmbedBuilder()
+				.setColor(0xFFD700)
+				.setTitle(`🎁 特別感謝 ${sender} 送給 ${target} 的 ${giftName} !!!`)
+				.setDescription(giftData.text)
+				.setThumbnail(sender.displayAvatarURL())
+				.setImage(giftData.image)
+				.setTimestamp();
+
+			  const channel = await interaction.guild.channels.fetch(GIFT_CHANNEL_ID);
+
+			  await channel.send({
+				embeds: [embed]
+			  });
+
+			  return interaction.reply({
+				content: "✅ 禮物已送出",
+				ephemeral: true
+			  });
+			}
+			
 		} catch (err) {
 			  console.error(err);
 
