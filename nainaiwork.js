@@ -754,7 +754,7 @@ client.on("interactionCreate", async (interaction) => {
 		  }
 		}
 		
-		if (interaction.customId === "finish_order") {
+		if (interaction.customId === "rate_feedback") {
 
 		  // ===== 權限 =====
 		  if (!interaction.member.roles.cache.has(SERVICE_ROLE_ID)) {
@@ -766,7 +766,18 @@ client.on("interactionCreate", async (interaction) => {
 
 		  const textChannel = interaction.channel;
 
-		  // ===== 評分按鈕（先準備）=====
+		  // ===== ❗防重複評價 =====
+		  const ratedRef = db.ref(`ratings/${textChannel.id}/${interaction.user.id}`);
+		  const snap = await ratedRef.once("value");
+
+		  if (snap.exists()) {
+			return interaction.reply({
+			  content: "❌ 此工單你已經評價過了",
+			  ephemeral: true
+			});
+		  }
+
+		  // ===== 評分按鈕 =====
 		  const row = new ActionRowBuilder().addComponents(
 			new ButtonBuilder().setCustomId("rate_1").setLabel("⭐").setStyle(ButtonStyle.Secondary),
 			new ButtonBuilder().setCustomId("rate_2").setLabel("⭐⭐").setStyle(ButtonStyle.Secondary),
@@ -775,68 +786,10 @@ client.on("interactionCreate", async (interaction) => {
 			new ButtonBuilder().setCustomId("rate_5").setLabel("⭐⭐⭐⭐⭐").setStyle(ButtonStyle.Success)
 		  );
 
-		  // ===== ⭐ 先回覆（避免 timeout）=====
-		  await interaction.reply({
+		  return interaction.reply({
 			content: "✨請為這次訂單做出評價✨",
 			components: [row]
 		  });
-
-		  // ===== 以下全部「背景執行」=====
-		  (async () => {
-
-			// ===== 1️⃣ 刪語音頻道 =====
-			try {
-			  let ownerId = null;
-
-			  const msgs = await textChannel.messages.fetch({ limit: 10 });
-			  const embedMsg = msgs.find(m => m.embeds?.[0]?.description?.includes("下單闆闆"));
-
-			  if (embedMsg) {
-				const match = embedMsg.embeds[0].description.match(/<@(\d+)>/);
-				if (match) ownerId = match[1];
-			  }
-
-			  if (ownerId) {
-				const member = await interaction.guild.members.fetch(ownerId);
-				const voiceName = `語音_${member.user.username}`;
-
-				const voiceChannel = interaction.guild.channels.cache.find(c =>
-				  c.type === ChannelType.GuildVoice &&
-				  c.name === voiceName &&
-				  c.parentId === "1493237762168721458"
-				);
-
-				if (voiceChannel) {
-				  await voiceChannel.delete().catch(() => {});
-				}
-			  }
-
-			} catch (err) {
-			  console.error("刪語音頻道錯誤:", err);
-			}
-
-			// ===== 2️⃣ 產生紀錄 =====
-			try {
-			  const filePath = await generateTranscript(textChannel);
-
-			  const isBoostOrder = textChannel.name.includes("代打訂單");
-
-			  const targetChannelId = isBoostOrder
-				? "1491426891754766466"
-				: "1490375081245933648";
-
-			  const logChannel = await interaction.guild.channels.fetch(targetChannelId);
-
-			  await logChannel.send({
-				content: `📜 工單紀錄：${textChannel.name}`,
-				files: [filePath]
-			  });
-
-			} catch (err) {
-			  console.error("紀錄產生錯誤:", err);
-			}
-
-		  })();
 		}
 		
 		if (interaction.customId.startsWith("rate_")) {
@@ -924,6 +877,94 @@ client.on("interactionCreate", async (interaction) => {
 
 		  return interaction.showModal(modal);
 		}
+		
+		if (interaction.customId === "close_ticket") {
+
+		  if (!interaction.member.roles.cache.has(SERVICE_ROLE_ID)) {
+			return interaction.reply({
+			  content: "❌ 僅限客服可操作",
+			  ephemeral: true
+			});
+		  }
+
+		  await interaction.reply({
+			content: "🗑️ 工單關閉中...",
+			ephemeral: true
+		  });
+
+		  const textChannel = interaction.channel;
+
+		  (async () => {
+
+			// ===== 刪語音 =====
+			try {
+			  let ownerId = null;
+
+			  const msgs = await textChannel.messages.fetch({ limit: 10 });
+			  const embedMsg = msgs.find(m => m.embeds?.[0]?.description?.includes("下單闆闆"));
+
+			  if (embedMsg) {
+				const match = embedMsg.embeds[0].description.match(/<@(\d+)>/);
+				if (match) ownerId = match[1];
+			  }
+
+			  if (ownerId) {
+				const member = await interaction.guild.members.fetch(ownerId);
+				const safeName = member.user.username.replace(/\s+/g, "");
+				const voiceName = `語音_${safeName}`;
+
+				const channels = await interaction.guild.channels.fetch();
+
+				const voiceChannel = channels.find(c =>
+				  c.type === ChannelType.GuildVoice &&
+				  c.name === voiceName &&
+				  c.parentId === "1493237762168721458"
+				);
+
+				if (voiceChannel) {
+				  await voiceChannel.delete().catch(() => {});
+				}
+			  }
+
+			} catch (err) {
+			  console.error("刪語音錯誤:", err);
+			}
+
+			// ===== 紀錄 =====
+			try {
+			  const filePath = await generateTranscript(textChannel);
+
+			  const isBoostOrder = textChannel.name.includes("代打訂單");
+
+			  const targetChannelId = isBoostOrder
+				? "1491426891754766466"
+				: "1490375081245933648";
+
+			  const logChannel = await interaction.guild.channels.fetch(targetChannelId);
+
+			  await logChannel.send({
+				content: `📜 工單紀錄：${textChannel.name}`,
+				files: [filePath]
+			  });
+
+			  setTimeout(() => {
+				fs.unlink(filePath, (err) => {
+				  if (err) console.error("刪檔失敗:", err);
+				});
+			  }, 5000);
+
+			} catch (err) {
+			  console.error("紀錄錯誤:", err);
+			}
+
+			// ===== 刪工單 =====
+			setTimeout(() => {
+			  textChannel.delete().catch(() => {});
+			  console.log("工單已刪除:", textChannel.name);
+			}, 10000);
+
+		  })();
+		}
 	}
 		
 	// ===== Modal 提交 =====
@@ -1004,8 +1045,13 @@ client.on("interactionCreate", async (interaction) => {
 				.setStyle(ButtonStyle.Secondary),
 
 			  new ButtonBuilder()
-				.setCustomId("finish_order")
-				.setLabel("✅ 訂單結束")
+				.setCustomId("rate_feedback")
+				.setLabel("⭐ 評價回饋")
+				.setStyle(ButtonStyle.Success),
+
+			  new ButtonBuilder()
+				.setCustomId("close_ticket")
+				.setLabel("🗑️ 結束工單")
 				.setStyle(ButtonStyle.Danger)
 			);
 
@@ -1072,16 +1118,21 @@ client.on("interactionCreate", async (interaction) => {
 			.setTimestamp();
 
 		  const row = new ActionRowBuilder().addComponents(
-			new ButtonBuilder()
-			  .setCustomId("create_voice")
-			  .setLabel("🔊 創建語音頻道")
-			  .setStyle(ButtonStyle.Secondary),
+			  new ButtonBuilder()
+				.setCustomId("create_voice")
+				.setLabel("🔊 創建語音頻道")
+				.setStyle(ButtonStyle.Secondary),
 
-			new ButtonBuilder()
-			  .setCustomId("finish_order")
-			  .setLabel("✅ 訂單結束")
-			  .setStyle(ButtonStyle.Danger)
-		  );
+			  new ButtonBuilder()
+				.setCustomId("rate_feedback")
+				.setLabel("⭐ 評價回饋")
+				.setStyle(ButtonStyle.Success),
+
+			  new ButtonBuilder()
+				.setCustomId("close_ticket")
+				.setLabel("🗑️ 結束工單")
+				.setStyle(ButtonStyle.Danger)
+			);
 
 		  await channel.send({
 			content: `<@&${SERVICE_ROLE_ID}>`,
@@ -1153,16 +1204,21 @@ client.on("interactionCreate", async (interaction) => {
 			.setTimestamp();
 
 		  const row = new ActionRowBuilder().addComponents(
-			new ButtonBuilder()
-			  .setCustomId("create_voice")
-			  .setLabel("🔊 創建語音頻道")
-			  .setStyle(ButtonStyle.Secondary),
+			  new ButtonBuilder()
+				.setCustomId("create_voice")
+				.setLabel("🔊 創建語音頻道")
+				.setStyle(ButtonStyle.Secondary),
 
-			new ButtonBuilder()
-			  .setCustomId("finish_order")
-			  .setLabel("✅ 訂單結束")
-			  .setStyle(ButtonStyle.Danger)
-		  );
+			  new ButtonBuilder()
+				.setCustomId("rate_feedback")
+				.setLabel("⭐ 評價回饋")
+				.setStyle(ButtonStyle.Success),
+
+			  new ButtonBuilder()
+				.setCustomId("close_ticket")
+				.setLabel("🗑️ 結束工單")
+				.setStyle(ButtonStyle.Danger)
+			);
 
 		  await channel.send({
 			content: `<@&${SERVICE_ROLE_ID}>`,
@@ -1181,16 +1237,28 @@ client.on("interactionCreate", async (interaction) => {
 
 		  try {
 
+			const textChannel = interaction.channel;
+			const ratedRef = db.ref(`ratings/${textChannel.id}/${interaction.user.id}`);
+			const snap = await ratedRef.once("value");
+
+			if (snap.exists()) {
+			  return interaction.editReply({
+				content: "❌ 你已經評價過此工單"
+			  });
+			}
+
 			const stars = interaction.customId.split("_")[2];
 			const companion = interaction.fields.getTextInputValue("companion");
 			const feedback = interaction.fields.getTextInputValue("feedback");
 
 			// ===== 取得工單創建人 =====
-			const textChannel = interaction.channel;
 			let ownerId = interaction.user.id;
 
 			const msgs = await textChannel.messages.fetch({ limit: 10 });
-			const embedMsg = msgs.find(m => m.embeds?.[0]?.description?.includes("下單闆闆"));
+
+			const embedMsg = msgs.find(m =>
+			  m.embeds?.[0]?.description?.includes("<@")
+			);
 
 			if (embedMsg) {
 			  const match = embedMsg.embeds[0].description.match(/<@(\d+)>/);
@@ -1201,11 +1269,11 @@ client.on("interactionCreate", async (interaction) => {
 
 			// ===== 評價 UI =====
 			const embed = new EmbedBuilder()
-			  .setColor(0xFFD700) // 金色
+			  .setColor(0xFFD700)
 			  .setAuthor({
 				name: `⭐ ${stars} 星評價`,
 			  })
-			  .setThumbnail(member.user.displayAvatarURL()) // 右側頭像
+			  .setThumbnail(member.user.displayAvatarURL())
 			  .addFields(
 				{ name: "👤 陪陪名稱", value: companion },
 				{ name: "⭐ 闆闆評分", value: `${"⭐".repeat(stars)}` },
@@ -1217,12 +1285,13 @@ client.on("interactionCreate", async (interaction) => {
 			  })
 			  .setTimestamp();
 
-			// ===== 發送到評價頻道 =====
-			const reviewChannel = interaction.guild.channels.cache.get("1489186836579356702");
+			const reviewChannel = await interaction.guild.channels.fetch("1489186836579356702");
 
 			await reviewChannel.send({
 			  embeds: [embed]
 			});
+
+			await ratedRef.set(true);
 
 			return interaction.editReply({
 			  content: "✅ 評價已送出，感謝您的回饋！"
@@ -1299,11 +1368,16 @@ client.on("interactionCreate", async (interaction) => {
 			.setTimestamp();
 
 		  const row = new ActionRowBuilder().addComponents(
-			new ButtonBuilder()
-			  .setCustomId("finish_order")
-			  .setLabel("✅ 訂單結束")
-			  .setStyle(ButtonStyle.Danger)
-		  );
+			  new ButtonBuilder()
+				.setCustomId("rate_feedback")
+				.setLabel("⭐ 評價回饋")
+				.setStyle(ButtonStyle.Success),
+
+			  new ButtonBuilder()
+				.setCustomId("close_ticket")
+				.setLabel("🗑️ 結束工單")
+				.setStyle(ButtonStyle.Danger)
+			);
 
 		  // ===== 發送通知 =====
 		  await channel.send({
@@ -1335,10 +1409,12 @@ client.on("interactionCreate", async (interaction) => {
 		  }
 
 		  // ===== 工單名稱（安全處理）=====
-		  const username = interaction.member.displayName;
+		  const username = interaction.member.displayName
+		  .replace(/\s+/g, "")
+		  .replace(/[^\u4e00-\u9fa5a-zA-Z0-9_]/g, "");
 
 		  const channel = await interaction.guild.channels.create({
-			name: `遊戲訂單_${username}`,
+			name: `便利貼訂單_${username}`,
 			type: ChannelType.GuildText,
 			parent: "1491428115258282205",
 			permissionOverwrites: [
@@ -1376,18 +1452,25 @@ client.on("interactionCreate", async (interaction) => {
 			.setTitle("📌 便利貼通知")
 			.setThumbnail(interaction.user.displayAvatarURL())
 			.addFields(
-			  { name: "👤 發送者", value: `<@${interaction.user.id}>` },
-			  { name: "💰 金額", value: `${amount.toLocaleString()} 元` },
-			  { name: "📝 備註", value: note }
+			  { name: "👤 闆闆名稱", value: `<@${interaction.user.id}>` },
+			  { name: "💰 此單金額", value: `${amount.toLocaleString()} 元` },
+			  { name: "📝 闆闆備註", value: note }
 			)
 			.setTimestamp();
 
 		  const row = new ActionRowBuilder().addComponents(
-			new ButtonBuilder()
-			  .setCustomId("finish_order")
-			  .setLabel("✅ 訂單結束")
-			  .setStyle(ButtonStyle.Danger)
-		  );
+
+			  new ButtonBuilder()
+				.setCustomId("rate_feedback")
+				.setLabel("⭐ 評價回饋")
+				.setStyle(ButtonStyle.Success),
+
+			  new ButtonBuilder()
+				.setCustomId("close_ticket")
+				.setLabel("🗑️ 結束工單")
+				.setStyle(ButtonStyle.Danger)
+
+			);
 
 		  // ===== 發送 =====
 		  await channel.send({
