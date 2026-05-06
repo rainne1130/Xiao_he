@@ -223,7 +223,6 @@ async function registerCommands(client) {
 			"zh-TW": "🎀 選擇想贈送的禮物"
 		  })
 		  .setRequired(true)
-
 		  .addChoices(
 			{ name: "🍮 布丁", value: "布丁" },
 			{ name: "☁️ 棉花糖", value: "棉花糖" },
@@ -233,6 +232,18 @@ async function registerCommands(client) {
 			{ name: "🀄 麻將發大財", value: "麻將發大財" },
 			{ name: "💍 鑽戒", value: "鑽戒" }
 		  )
+	  )
+
+	  .addBooleanOption(o =>
+		o.setName("anonymous")
+		  .setNameLocalizations({
+			"zh-TW": "匿名贈送"
+		  })
+		  .setDescription("Anonymous gift")
+		  .setDescriptionLocalizations({
+			"zh-TW": "🎭 是否匿名送禮"
+		  })
+		  .setRequired(false)
 	  ),
 	  
 	  new SlashCommandBuilder()
@@ -738,6 +749,9 @@ client.on("interactionCreate", async (interaction) => {
 			  const targetsInput =
 				interaction.options.getString("targets");
 
+			  const anonymous =
+				interaction.options.getBoolean("anonymous") ?? false;
+
 			  const mentionMatches =
 				targetsInput.match(/<@!?(\d+)>/g);
 
@@ -760,7 +774,7 @@ client.on("interactionCreate", async (interaction) => {
 
 			  const targetMentions = [];
 
-			  // ===== 平行處理（快很多）=====
+			  // ===== 平行處理 =====
 			  const members = await Promise.all(
 				mentionMatches.map(async (mention) => {
 
@@ -780,24 +794,37 @@ client.on("interactionCreate", async (interaction) => {
 				if (m) targetMentions.push(m);
 			  }
 
+			  // ===== 顯示名稱 =====
+			  const senderDisplay = anonymous
+				? "匿名闆闆"
+				: sender.username;
+
 			  // ===== Embed =====
 			  const embed = new EmbedBuilder()
 				.setColor(0xFFD700)
 				.setDescription(
-			`🎁 特別感謝 ${sender} 送給 ${targetMentions.join(" ")} 的 ${giftName} !!!
-			──────────────
+			`🎁 特別感謝 ${senderDisplay} 送給 ${targetMentions.join(" ")} 的 ${giftName} !!!
+
+			─────────────────────
 
 			${giftData.text}`
 				)
-				.setThumbnail(sender.displayAvatarURL())
 				.setImage(giftData.image)
 				.setTimestamp();
+
+			  // ===== 非匿名才顯示頭像 =====
+			  if (!anonymous) {
+				embed.setThumbnail(sender.displayAvatarURL());
+			  }
 
 			  const channel =
 				await interaction.guild.channels.fetch(GIFT_CHANNEL_ID);
 
+			  // ===== 發送 =====
 			  await channel.send({
-				content: `${sender} ${targetMentions.join(" ")}`,
+				content: anonymous
+				  ? `${targetMentions.join(" ")}`
+				  : `${sender} ${targetMentions.join(" ")}`,
 				embeds: [embed]
 			  });
 
