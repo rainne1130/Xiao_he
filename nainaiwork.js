@@ -822,7 +822,14 @@ client.on("interactionCreate", async (interaction) => {
 			.setCustomId("modal_note")
 			.setTitle("📌 便利貼");
 
-		  const input = new TextInputBuilder()
+		  const input1 = new TextInputBuilder()
+			.setCustomId("amount")
+			.setLabel("金額")
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder("最低金額為50元")
+			.setRequired(true);
+
+		  const input2 = new TextInputBuilder()
 			.setCustomId("note")
 			.setLabel("備註")
 			.setStyle(TextInputStyle.Paragraph)
@@ -830,7 +837,8 @@ client.on("interactionCreate", async (interaction) => {
 			.setRequired(true);
 
 		  modal.addComponents(
-			new ActionRowBuilder().addComponents(input)
+			new ActionRowBuilder().addComponents(input1),
+			new ActionRowBuilder().addComponents(input2)
 		  );
 
 		  return interaction.showModal(modal);
@@ -1232,10 +1240,21 @@ client.on("interactionCreate", async (interaction) => {
 
 		  await interaction.deferReply({ ephemeral: true });
 
+		  // ===== 取得資料 =====
+		  const amountRaw = interaction.fields.getTextInputValue("amount");
 		  const note = interaction.fields.getTextInputValue("note");
 
-		  // ===== 工單名稱（用使用者名稱）=====
-		  const username = interaction.user.username;
+		  const amount = Number(amountRaw);
+
+		  // ===== 金額檢查 =====
+		  if (isNaN(amount) || amount < 50) {
+			return interaction.editReply({
+			  content: "❌ 金額最低為 50 元，請重新輸入"
+			});
+		  }
+
+		  // ===== 工單名稱（安全處理）=====
+		  const username = interaction.member.displayName;
 
 		  const channel = await interaction.guild.channels.create({
 			name: `遊戲訂單_${username}`,
@@ -1277,7 +1296,8 @@ client.on("interactionCreate", async (interaction) => {
 			.setThumbnail(interaction.user.displayAvatarURL())
 			.addFields(
 			  { name: "👤 發送者", value: `<@${interaction.user.id}>` },
-			  { name: "📝 內容", value: note }
+			  { name: "💰 金額", value: `${amount.toLocaleString()} 元` },
+			  { name: "📝 備註", value: note }
 			)
 			.setTimestamp();
 
