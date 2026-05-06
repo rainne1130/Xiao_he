@@ -472,6 +472,11 @@ client.on("interactionCreate", async (interaction) => {
 			  new ButtonBuilder()
 				.setCustomId("order_voice")
 				.setLabel("🎧 語音訂單")
+				.setStyle(ButtonStyle.Secondary),
+				
+			  new ButtonBuilder()
+				.setCustomId("note")
+				.setLabel("📌 便利貼")
 				.setStyle(ButtonStyle.Secondary)
 			);
 
@@ -806,6 +811,26 @@ client.on("interactionCreate", async (interaction) => {
 		  modal.addComponents(
 			new ActionRowBuilder().addComponents(input1),
 			new ActionRowBuilder().addComponents(input2)
+		  );
+
+		  return interaction.showModal(modal);
+		}
+		
+		if (interaction.customId === "note") {
+
+		  const modal = new ModalBuilder()
+			.setCustomId("modal_note")
+			.setTitle("📌 便利貼");
+
+		  const input = new TextInputBuilder()
+			.setCustomId("note")
+			.setLabel("備註")
+			.setStyle(TextInputStyle.Paragraph)
+			.setPlaceholder("幫我選午餐吃甚麼")
+			.setRequired(true);
+
+		  modal.addComponents(
+			new ActionRowBuilder().addComponents(input)
 		  );
 
 		  return interaction.showModal(modal);
@@ -1200,6 +1225,78 @@ client.on("interactionCreate", async (interaction) => {
 
 		  return interaction.editReply({
 			content: `✅ 禮物訂單已建立：${channel}`
+		  });
+		}
+		
+		if (interaction.customId === "modal_note") {
+
+		  await interaction.deferReply({ ephemeral: true });
+
+		  const note = interaction.fields.getTextInputValue("note");
+
+		  // ===== 工單名稱（用使用者名稱）=====
+		  const username = interaction.user.username;
+
+		  const channel = await interaction.guild.channels.create({
+			name: `遊戲訂單_${username}`,
+			type: ChannelType.GuildText,
+			parent: "1491428115258282205",
+			permissionOverwrites: [
+			  {
+				id: interaction.guild.roles.everyone.id,
+				deny: [PermissionFlagsBits.ViewChannel]
+			  },
+			  {
+				id: SERVICE_ROLE_ID,
+				allow: [
+				  PermissionFlagsBits.ViewChannel,
+				  PermissionFlagsBits.SendMessages
+				]
+			  },
+			  {
+				id: interaction.user.id,
+				allow: [
+				  PermissionFlagsBits.ViewChannel,
+				  PermissionFlagsBits.SendMessages
+				]
+			  },
+			  {
+				id: interaction.guild.members.me.id,
+				allow: [
+				  PermissionFlagsBits.ViewChannel,
+				  PermissionFlagsBits.SendMessages
+				]
+			  }
+			]
+		  });
+
+		  // ===== UI =====
+		  const embed = new EmbedBuilder()
+			.setColor(0x00cc99)
+			.setTitle("📌 便利貼通知")
+			.setThumbnail(interaction.user.displayAvatarURL())
+			.addFields(
+			  { name: "👤 發送者", value: `<@${interaction.user.id}>` },
+			  { name: "📝 內容", value: note }
+			)
+			.setTimestamp();
+
+		  const row = new ActionRowBuilder().addComponents(
+			new ButtonBuilder()
+			  .setCustomId("finish_order")
+			  .setLabel("✅ 訂單結束")
+			  .setStyle(ButtonStyle.Danger)
+		  );
+
+		  // ===== 發送 =====
+		  await channel.send({
+			content: `<@&${SERVICE_ROLE_ID}> <@${interaction.user.id}>`,
+			embeds: [embed],
+			components: [row]
+		  });
+
+		  return interaction.editReply({
+			content: `✅ 便利貼已建立：${channel}`
 		  });
 		}
 	}
