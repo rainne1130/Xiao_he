@@ -230,7 +230,10 @@ async function registerCommands(client) {
 			{ name: "🍗 鹹酥雞", value: "鹹酥雞" },
 			{ name: "✔️ 好寶寶印章", value: "好寶寶印章" },
 			{ name: "🀄 麻將發大財", value: "麻將發大財" },
-			{ name: "💍 鑽戒", value: "鑽戒" }
+			{ name: "💍 鑽戒", value: "鑽戒" },
+			{ name: "🏎️ 跑車", value: "跑車" },
+			{ name: "🚀 火箭", value: "火箭" },
+			{ name: "🏰 城堡", value: "城堡" }
 		  )
 	  )
 
@@ -406,6 +409,33 @@ const GIFTS = {
 像鑽戒一樣閃耀又珍貴
 每一分努力都值得被看見✨
 老闆：你真的很重要！`
+  },
+  
+  "跑車": {
+    image: "https://cdn.discordapp.com/attachments/1501718201732698263/1501718203762606180/20fe91246dc790c2.png?ex=69fd1790&is=69fbc610&hm=f6e490538faa378f4fc7912f0e0ef348c84fa6d3d1f20336b4ce43dcfd3538b6&",
+    text:
+`今天直接帥一波✨
+像跑車一樣速度與魅力兼具
+魅力值直接飆到最高🏎
+老闆：今天你最吸睛！`
+  },
+  
+  "火箭": {
+    image: "https://cdn.discordapp.com/attachments/1501718424659693640/1501718425284640819/909801e91e66fc8f.png?ex=69fd17c5&is=69fbc645&hm=8b4c254616783a441713c5d74b8cf383d8a0e3b1351105c1d51a1c0a55061186&",
+    text:
+`今天狀態直接起飛🚀
+一路衝上巔峰停不下來！
+努力都會被看見✨
+老闆：帶你一起飛更高！`
+  },
+  
+  "城堡": {
+    image: "https://cdn.discordapp.com/attachments/1501718646785835088/1501718647184298004/998f3d118ac7121f.png?ex=69fd17fa&is=69fbc67a&hm=bb166a3342eb97322a7c3a9ff2015d4da4bfd48a184b71bdabb91abe4052fe22&",
+    text:
+`今天你就是小公主/小王子👑
+住進夢想中的可愛城堡
+被好運跟寵愛包圍💖
+老闆：你值得最好的✨`
   }
 };
 
