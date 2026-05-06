@@ -1,6 +1,8 @@
 const { 
   Client,ActionRowBuilder,ButtonBuilder,ButtonStyle,GatewayIntentBits,
-  EmbedBuilder,REST,Routes,SlashCommandBuilder
+  EmbedBuilder,REST,Routes,SlashCommandBuilder,ModalBuilder,
+  TextInputBuilder,TextInputStyle,
+  ChannelType,PermissionFlagsBits,
 } = require("discord.js");
 
 const admin = require("firebase-admin");
@@ -238,283 +240,395 @@ client.once("ready", async () => {
 
 // ===== 指令處理 =====
 client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
 
-  if (!hasPermission(interaction.member)) {
-    return interaction.reply({ content: "❌ 無權限", ephemeral: true });
-  }
+  if (interaction.isChatInputCommand()) {
 
-  const user = interaction.options.getUser("user");
-  const cmd = interaction.commandName;
+		const cmd = interaction.commandName;
+		const user = interaction.options.getUser("user");
 
-  try {
+		// 權限
+		if (["addpoint", "removepoint", "cleartotal", "top"].includes(cmd)) {
+		  if (!hasPermission(interaction.member)) {
+			return interaction.reply({
+			  content: "❌ 您沒有權限使用此功能",
+			  ephemeral: true
+			});
+		  }
+		}
 
-    if (cmd === "addpoint") {
-		
-		if (!hasPermission(interaction.member)) {
-		return interaction.reply({
-		  content: "❌ 無權限",
-		  ephemeral: true
-		});
-	  }
-	  const amount = interaction.options.getInteger("amount");
+		try {
 
-	  const { newBalance, newTotal } = await addPoint(user.id, amount);
+			if (cmd === "addpoint") {
 
-	  const embed = new EmbedBuilder()
-		.setColor(0x00ff99)
-		.setTitle("💳 點數異動通知")
-		.setAuthor({
-		  name: `${user.username} 加值成功`
-		})
-		.setThumbnail(user.displayAvatarURL())
-		.addFields(
-		  { name: "💰 加值金額", value: `+${amount.toLocaleString()}`, inline: true },
-		  { name: "📊 目前餘額", value: `${newBalance.toLocaleString()}`, inline: true },
-		  { name: "📈 累積點數", value: `${newTotal.toLocaleString()}`, inline: true }
-		)
-		.setFooter({
-		  text: `操作人：${interaction.user.displayName ?? interaction.user.username}`,
-		  iconURL: interaction.user.displayAvatarURL()
-		})
-		.setTimestamp();
-	  return interaction.reply({
-		embeds: [embed]
-	  });
-	}
+			  const amount = interaction.options.getInteger("amount");
 
-    if (cmd === "removepoint") {
-		
-		if (!hasPermission(interaction.member)) {
-		return interaction.reply({
-		  content: "❌ 無權限",
-		  ephemeral: true
-		});
-	  }
-	  const amount = interaction.options.getInteger("amount");
+			  const { newBalance, newTotal } = await addPoint(user.id, amount);
 
-	  const newBalance = await removePoint(user.id, amount);
+			  const embed = new EmbedBuilder()
+				.setColor(0x00ff99)
+				.setTitle("💳 點數異動通知")
+				.setAuthor({
+				  name: `${user.username} 加值成功`
+				})
+				.setThumbnail(user.displayAvatarURL())
+				.addFields(
+				  { name: "💰 加值金額", value: `+${amount.toLocaleString()}`, inline: true },
+				  { name: "📊 目前餘額", value: `${newBalance.toLocaleString()}`, inline: true },
+				  { name: "📈 累積點數", value: `${newTotal.toLocaleString()}`, inline: true }
+				)
+				.setFooter({
+				  text: `操作人：${interaction.user.displayName ?? interaction.user.username}`,
+				  iconURL: interaction.user.displayAvatarURL()
+				})
+				.setTimestamp();
+			  return interaction.reply({
+				embeds: [embed]
+			  });
+			}
 
-	  const embed = new EmbedBuilder()
-		.setColor(0xff4444)
-		.setTitle("💳 點數異動通知")
-		.setAuthor({
-		  name: `${user.username} 扣款成功`
-		})
-		.setThumbnail(user.displayAvatarURL())
-		.addFields(
-		  { name: "💸 扣款金額", value: `-${amount.toLocaleString()}`, inline: true },
-		  { name: "📊 目前餘額", value: `${newBalance.toLocaleString()}`, inline: true }
-		)
-		.setFooter({
-		  text: `操作人：${interaction.user.displayName ?? interaction.user.username}`,
-		  iconURL: interaction.user.displayAvatarURL()
-		})
-		.setTimestamp();
+			if (cmd === "removepoint") {
 
-	  return interaction.reply({
-		embeds: [embed]
-	  });
-	}
+			  const amount = interaction.options.getInteger("amount");
 
-    if (cmd === "point") {
+			  const newBalance = await removePoint(user.id, amount);
 
-	  // ❌ 禁止查別人
-	  if (user.id !== interaction.user.id) {
-		return interaction.reply({
-		  content: "❌ 只能查詢自己的點數",
-		  ephemeral: true
-		});
-	  }
+			  const embed = new EmbedBuilder()
+				.setColor(0xff4444)
+				.setTitle("💳 點數異動通知")
+				.setAuthor({
+				  name: `${user.username} 扣款成功`
+				})
+				.setThumbnail(user.displayAvatarURL())
+				.addFields(
+				  { name: "💸 扣款金額", value: `-${amount.toLocaleString()}`, inline: true },
+				  { name: "📊 目前餘額", value: `${newBalance.toLocaleString()}`, inline: true }
+				)
+				.setFooter({
+				  text: `操作人：${interaction.user.displayName ?? interaction.user.username}`,
+				  iconURL: interaction.user.displayAvatarURL()
+				})
+				.setTimestamp();
 
-	  const data = await getUser(user.id);
+			  return interaction.reply({
+				embeds: [embed]
+			  });
+			}
 
-	  const embed = new EmbedBuilder()
-		.setColor(0x3399ff)
-		.setTitle("📊 點數查詢")
-		.setAuthor({
-		  name: `${user.username} 點數資訊`
-		})
-		.setThumbnail(user.displayAvatarURL())
-		.addFields(
-		  { name: "💰 目前餘額", value: `${data.balance.toLocaleString()}` }
-		)
-		.setFooter({
-		  text: `查詢者：${interaction.user.displayName ?? interaction.user.username}`,
-		  iconURL: interaction.user.displayAvatarURL()
-		})
-		.setTimestamp();
+			if (cmd === "point") {
 
-	  return interaction.reply({
-		embeds: [embed],
-		ephemeral: true
-	  });
-	}
+			  // ❌ 禁止查別人
+			  if (user.id !== interaction.user.id) {
+				return interaction.reply({
+				  content: "❌ 只能查詢自己的點數",
+				  ephemeral: true
+				});
+			  }
 
-    if (cmd === "totalpoint") {
+			  const data = await getUser(user.id);
 
-	  const user = interaction.user;
+			  const embed = new EmbedBuilder()
+				.setColor(0x3399ff)
+				.setTitle("📊 點數查詢")
+				.setAuthor({
+				  name: `${user.username} 點數資訊`
+				})
+				.setThumbnail(user.displayAvatarURL())
+				.addFields(
+				  { name: "💰 目前餘額", value: `${data.balance.toLocaleString()}` }
+				)
+				.setFooter({
+				  text: `查詢者：${interaction.user.displayName ?? interaction.user.username}`,
+				  iconURL: interaction.user.displayAvatarURL()
+				})
+				.setTimestamp();
 
-	  const data = await getUser(user.id);
+			  return interaction.reply({
+				embeds: [embed],
+				ephemeral: true
+			  });
+			}
 
-	  const embed = new EmbedBuilder()
-		.setColor(0x9966ff)
-		.setTitle("📈 累積點數查詢")
-		.setAuthor({
-		  name: `${user.username} 累積資訊`
-		})
-		.setThumbnail(user.displayAvatarURL())
-		.addFields(
-		  { name: "📈 總累積點數", value: `${data.total.toLocaleString()}` }
-		)
-		.setFooter({
-		  text: `查詢者：${interaction.user.displayName ?? interaction.user.username}`,
-		  iconURL: interaction.user.displayAvatarURL()
-		})
-		.setTimestamp();
+			if (cmd === "totalpoint") {
 
-	  return interaction.reply({
-		embeds: [embed],
-		ephemeral: true
-	  });
-	}
+			  const user = interaction.user;
 
-    if (cmd === "cleartotal") {
-		
-		if (!hasPermission(interaction.member)) {
-		return interaction.reply({
-		  content: "❌ 無權限",
-		  ephemeral: true
-		});
-	  }
-	  await clearTotal(user.id);
+			  const data = await getUser(user.id);
 
-	  const embed = new EmbedBuilder()
-		.setColor(0xff9900)
-		.setTitle("🧹 系統操作通知")
-		.setAuthor({
-		  name: `${user.username} 累積已清除`
-		})
-		.setThumbnail(user.displayAvatarURL())
-		.addFields(
-		  { name: "📈 累積點數", value: "已重置為 0" }
-		)
-		.setFooter({
-		  text: `操作人：${interaction.user.displayName ?? interaction.user.username}`,
-		  iconURL: interaction.user.displayAvatarURL()
-		})
-		.setTimestamp();
+			  const embed = new EmbedBuilder()
+				.setColor(0x9966ff)
+				.setTitle("📈 累積點數查詢")
+				.setAuthor({
+				  name: `${user.username} 累積資訊`
+				})
+				.setThumbnail(user.displayAvatarURL())
+				.addFields(
+				  { name: "📈 總累積點數", value: `${data.total.toLocaleString()}` }
+				)
+				.setFooter({
+				  text: `查詢者：${interaction.user.displayName ?? interaction.user.username}`,
+				  iconURL: interaction.user.displayAvatarURL()
+				})
+				.setTimestamp();
 
-	  return interaction.reply({
-		embeds: [embed],
-		ephemeral: true
-	  });
-	}
-	
-	if (cmd === "top") {
+			  return interaction.reply({
+				embeds: [embed],
+				ephemeral: true
+			  });
+			}
 
-	  if (!hasPermission(interaction.member)) {
-		return interaction.reply({
-		  content: "❌ 無權限",
-		  ephemeral: true
-		});
-	  }
+			if (cmd === "cleartotal") {
 
-	  const ref = db.ref("users");
-	  const snap = await ref.once("value");
-	  const data = snap.val() || {};
+			  await clearTotal(user.id);
 
-	  const list = Object.entries(data)
-		.map(([id, v]) => ({
-		  id,
-		  total: v.total || 0
-		}))
-		.filter(v => v.total > 0);
+			  const embed = new EmbedBuilder()
+				.setColor(0xff9900)
+				.setTitle("🧹 系統操作通知")
+				.setAuthor({
+				  name: `${user.username} 累積已清除`
+				})
+				.setThumbnail(user.displayAvatarURL())
+				.addFields(
+				  { name: "📈 累積點數", value: "已重置為 0" }
+				)
+				.setFooter({
+				  text: `操作人：${interaction.user.displayName ?? interaction.user.username}`,
+				  iconURL: interaction.user.displayAvatarURL()
+				})
+				.setTimestamp();
 
-	  list.sort((a, b) => b.total - a.total);
+			  return interaction.reply({
+				embeds: [embed],
+				ephemeral: true
+			  });
+			}
+			
+			if (cmd === "top") {
 
-	  const top10 = list.slice(0, 10);
+			  const ref = db.ref("users");
+			  const snap = await ref.once("value");
+			  const data = snap.val() || {};
 
-	  if (top10.length === 0) {
-		return interaction.reply({
-		  content: "📭 目前沒有任何累積資料",
-		  ephemeral: true
-		});
-	  }
+			  const list = Object.entries(data)
+				.map(([id, v]) => ({
+				  id,
+				  total: v.total || 0
+				}))
+				.filter(v => v.total > 0);
 
-	  const lines = await Promise.all(
-		top10.map(async (u, i) => {
-		  let name = `未知玩家`;
+			  list.sort((a, b) => b.total - a.total);
 
-		  try {
-			const member = await interaction.guild.members.fetch(u.id);
-			name = member.displayName;
-		  } catch {}
+			  const top10 = list.slice(0, 10);
 
-		  return `**${i + 1}.** ${name} ｜ ${u.total.toLocaleString()}`;
-		})
-	  );
+			  if (top10.length === 0) {
+				return interaction.reply({
+				  content: "📭 目前沒有任何累積資料",
+				  ephemeral: true
+				});
+			  }
 
-	  const embed = new EmbedBuilder()
-		.setColor(0xFFD700)
-		.setTitle("🏆 累積點數排行 TOP 10")
-		.setDescription(lines.join("\n"))
-		.setTimestamp();
+			  const lines = await Promise.all(
+				top10.map(async (u, i) => {
+				  let name = `未知玩家`;
 
-	  return interaction.reply({
-		embeds: [embed],
-		ephemeral: true
-	  });
-	}
-	
-	if (cmd === "menu") {
+				  try {
+					const member = await interaction.guild.members.fetch(u.id);
+					name = member.displayName;
+				  } catch {}
 
-	  const embed = new EmbedBuilder()
-		.setColor(0x3399ff) // 藍色條
-		.setDescription(
-	`🎀✨【下單區｜開始你的專屬時光】✨🎀
-	
-	☃︎歡迎來到奈奈的下單區(｡•ᴗ•｡)♡
-	想找人陪你玩、聊天或放鬆一下嗎？
-	點擊下方按鈕，就可以開始你的專屬時光啦❄︎`
+				  return `**${i + 1}.** ${name} ｜ ${u.total.toLocaleString()}`;
+				})
+			  );
+
+			  const embed = new EmbedBuilder()
+				.setColor(0xFFD700)
+				.setTitle("🏆 累積點數排行 TOP 10")
+				.setDescription(lines.join("\n"))
+				.setTimestamp();
+
+			  return interaction.reply({
+				embeds: [embed],
+				ephemeral: true
+			  });
+			}
+			
+			if (cmd === "menu") {
+
+			  const embed = new EmbedBuilder()
+				.setColor(0x3399ff) // 藍色條
+				.setDescription(
+			`🎀✨【下單區｜開始你的專屬時光】✨🎀
+			
+			☃︎歡迎來到奈奈的下單區(｡•ᴗ•｡)♡
+			想找人陪你玩、聊天或放鬆一下嗎？
+			點擊下方按鈕，就可以開始你的專屬時光啦❄︎`
+				);
+
+			  const row1 = new ActionRowBuilder().addComponents(
+			  new ButtonBuilder()
+				.setCustomId("order_game")
+				.setLabel("🎮 遊戲訂單")
+				.setStyle(ButtonStyle.Secondary),
+
+			  new ButtonBuilder()
+				.setCustomId("order_voice")
+				.setLabel("🎧 語音訂單")
+				.setStyle(ButtonStyle.Secondary)
+			);
+
+			const row2 = new ActionRowBuilder().addComponents(
+			  new ButtonBuilder()
+				.setCustomId("order_boost")
+				.setLabel("⚔️ 代打訂單")
+				.setStyle(ButtonStyle.Secondary),
+
+			  new ButtonBuilder()
+				.setCustomId("order_gift")
+				.setLabel("🎁 贈送禮物")
+				.setStyle(ButtonStyle.Secondary)
+			);
+
+			  return interaction.reply({
+				embeds: [embed],
+				components: [row1, row2]
+			  });
+			}
+		} catch (err) {
+			  console.error(err);
+
+			  if (interaction.deferred || interaction.replied) {
+				return interaction.editReply({
+				  content: `❌ ${err.message}`
+				});
+			  } else {
+				return interaction.reply({
+				  content: `❌ ${err.message}`,
+				  ephemeral: true
+				});
+			  }
+			}
+    }
+
+// ===== 按鈕點擊 =====
+	if (interaction.isButton()) {
+
+		if (interaction.customId === "order_game") {
+
+		const modal = new ModalBuilder()
+		.setCustomId("modal_game_order")
+		.setTitle("🎮 遊戲訂單");
+
+		const input1 = new TextInputBuilder()
+		.setCustomId("companion")
+		.setLabel("請選擇指定的陪陪")
+		.setStyle(TextInputStyle.Short)
+		.setPlaceholder("不指定 or 奈奈")
+		.setRequired(true);
+
+		const input2 = new TextInputBuilder()
+		.setCustomId("game")
+		.setLabel("下單的遊戲名稱")
+		.setStyle(TextInputStyle.Short)
+		.setPlaceholder("特戰英豪")
+		.setRequired(true);
+
+		const input3 = new TextInputBuilder()
+		.setCustomId("type")
+		.setLabel("下單類型")
+		.setStyle(TextInputStyle.Short)
+		.setPlaceholder("娛樂／技術／大神")
+		.setRequired(true);
+
+		const input4 = new TextInputBuilder()
+		.setCustomId("time")
+		.setLabel("下單時間（非必填）")
+		.setStyle(TextInputStyle.Short)
+		.setPlaceholder("1/1 13:00")
+		.setRequired(false);
+
+		modal.addComponents(
+		new ActionRowBuilder().addComponents(input1),
+		new ActionRowBuilder().addComponents(input2),
+		new ActionRowBuilder().addComponents(input3),
+		new ActionRowBuilder().addComponents(input4)
 		);
 
-	  const row1 = new ActionRowBuilder().addComponents(
-	  new ButtonBuilder()
-		.setCustomId("order_game")
-		.setLabel("🎮 遊戲訂單")
-		.setStyle(ButtonStyle.Secondary),
-
-	  new ButtonBuilder()
-		.setCustomId("order_voice")
-		.setLabel("🎧 語音訂單")
-		.setStyle(ButtonStyle.Secondary)
-	);
-
-	const row2 = new ActionRowBuilder().addComponents(
-	  new ButtonBuilder()
-		.setCustomId("order_boost")
-		.setLabel("⚔️ 代打訂單")
-		.setStyle(ButtonStyle.Secondary),
-
-	  new ButtonBuilder()
-		.setCustomId("order_gift")
-		.setLabel("🎁 贈送禮物")
-		.setStyle(ButtonStyle.Secondary)
-	);
-
-	  return interaction.reply({
-		embeds: [embed],
-		components: [row1, row2]
-	  });
+		return interaction.showModal(modal);
+		}
 	}
+		
+	// ===== Modal 提交 =====
+	if (interaction.isModalSubmit()) {
 
-  } catch (err) {
-    return interaction.reply({
-	  embeds: [embed],
-	  components: [row1, row2]
-	});
-  }
+		if (interaction.customId === "modal_game_order") {
+
+			await interaction.deferReply({ ephemeral: true });
+
+			const companion = interaction.fields.getTextInputValue("companion");
+			const game = interaction.fields.getTextInputValue("game");
+			const type = interaction.fields.getTextInputValue("type");
+			const time = interaction.fields.getTextInputValue("time") || "未填寫";
+
+			const counterRef = db.ref("counters/gameOrder");
+			const snap = await counterRef.once("value");
+			let num = (snap.val() || 0) + 1;
+			await counterRef.set(num);
+
+			const code = String(num).padStart(4, "0");
+
+			const channel = await interaction.guild.channels.create({
+			  name: `遊戲訂單_${code}`,
+			  type: ChannelType.GuildText,
+			  parent: "1491428115258282205",
+			  permissionOverwrites: [
+				{
+				  id: interaction.guild.roles.everyone,
+				  deny: [PermissionFlagsBits.ViewChannel]
+				},
+				{
+				  id: SERVICE_ROLE_ID,
+				  allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+				},
+				{
+				  id: interaction.user.id,
+				  allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+				}
+			  ]
+			});
+
+			const embed = new EmbedBuilder()
+			  .setColor(0x3399ff)
+			  .setTitle("✨叮咚!有新的遊戲訂單✨")
+			  .setDescription(
+		`👤 下單闆闆：<@${interaction.user.id}>
+		🎮 遊戲名稱：${game}
+		📌 遊戲類型：${type}
+		👥 指定陪陪：${companion}
+		⏰ 預約時間：${time}`
+			  )
+			  .setTimestamp();
+
+			const row = new ActionRowBuilder().addComponents(
+			  new ButtonBuilder()
+				.setCustomId("create_voice")
+				.setLabel("🔊 創建語音頻道")
+				.setStyle(ButtonStyle.Secondary),
+
+			  new ButtonBuilder()
+				.setCustomId("finish_order")
+				.setLabel("✅ 訂單結束")
+				.setStyle(ButtonStyle.Danger)
+			);
+
+			await channel.send({
+			  content: `<@&${SERVICE_ROLE_ID}>`,
+			  embeds: [embed],
+			  components: [row]
+			});
+
+			return interaction.editReply({
+			  content: `✅ 訂單已建立：${channel}`
+			});
+		  }
+		}
 });
-
 client.login(process.env.TOKEN);
