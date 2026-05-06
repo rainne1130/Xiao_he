@@ -8,7 +8,7 @@ const {
 const admin = require("firebase-admin");
 
 // ===== 設定 =====
-const SERVICE_ROLE_ID = "1500107633900781649";
+const SERVICE_ROLE_ID = "1490342166910996510";
 const GUILD_ID = "1488912636040052869";
 
 const client = new Client({
