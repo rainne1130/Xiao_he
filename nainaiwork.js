@@ -32,11 +32,11 @@ async function registerCommands(client) {
     new SlashCommandBuilder()
 	  .setName("addpoint")
 	  .setNameLocalizations({
-		"zh-TW": "儲值q幣"
+		"zh-TW": "儲值奈奈幣"
 	  })
 	  .setDescription("Add points to a user")
 	  .setDescriptionLocalizations({
-		"zh-TW": "💰 為指定闆闆增加q幣"
+		"zh-TW": "💰 為指定闆闆增加奈奈幣"
 	  })
 	  .addUserOption(o =>
 		o.setName("user")
@@ -52,11 +52,11 @@ async function registerCommands(client) {
 	  .addIntegerOption(o =>
 		o.setName("amount")
 		 .setNameLocalizations({
-		   "zh-TW": "增加q幣"
+		   "zh-TW": "增加奈奈幣"
 		 })
 		 .setDescription("Amount of points")
 		 .setDescriptionLocalizations({
-		   "zh-TW": "💵 輸入要增加的q幣"
+		   "zh-TW": "💵 輸入要增加的奈奈幣"
 		 })
 		 .setMinValue(1)
 		 .setRequired(true)
@@ -65,11 +65,11 @@ async function registerCommands(client) {
     new SlashCommandBuilder()
 	  .setName("removepoint")
 	  .setNameLocalizations({
-		"zh-TW": "扣除q幣"
+		"zh-TW": "扣除奈奈幣"
 	  })
 	  .setDescription("Remove points from a user")
 	  .setDescriptionLocalizations({
-		"zh-TW": "💸 扣除指定闆闆的q幣"
+		"zh-TW": "💸 扣除指定闆闆的奈奈幣"
 	  })
 	  .addUserOption(o =>
 		o.setName("user")
@@ -85,11 +85,11 @@ async function registerCommands(client) {
 	  .addIntegerOption(o =>
 		o.setName("amount")
 		 .setNameLocalizations({
-		   "zh-TW": "扣除q幣"
+		   "zh-TW": "扣除奈奈幣"
 		 })
 		 .setDescription("Amount to remove")
 		 .setDescriptionLocalizations({
-		   "zh-TW": "💵 輸入要扣除的q幣"
+		   "zh-TW": "💵 輸入要扣除的奈奈幣"
 		 })
 		 .setMinValue(1)
 		 .setMaxValue(1000000)
@@ -99,11 +99,11 @@ async function registerCommands(client) {
     new SlashCommandBuilder()
 	  .setName("point")
 	  .setNameLocalizations({
-		"zh-TW": "查詢q幣餘額"
+		"zh-TW": "查詢奈奈幣餘額"
 	  })
 	  .setDescription("Check your balance")
 	  .setDescriptionLocalizations({
-		"zh-TW": "📊 查詢自己的q幣餘額"
+		"zh-TW": "📊 查詢自己的奈奈幣餘額"
 	  })
 	  .addUserOption(o =>
 		o.setName("user")
@@ -124,7 +124,7 @@ async function registerCommands(client) {
 	  })
 	  .setDescription("Check total points")
 	  .setDescriptionLocalizations({
-		"zh-TW": "📈 查詢累積q幣"
+		"zh-TW": "📈 查詢累積奈奈幣"
 	  })
 	  .addUserOption(o =>
 		o.setName("user")
@@ -145,7 +145,7 @@ async function registerCommands(client) {
 	  })
 	  .setDescription("Reset user's total points")
 	  .setDescriptionLocalizations({
-		"zh-TW": "🧹 清除指定闆闆的累積q幣"
+		"zh-TW": "🧹 清除指定闆闆的累積奈奈幣"
 	  })
 	  .addUserOption(o =>
 		o.setName("user")
@@ -162,11 +162,11 @@ async function registerCommands(client) {
 	new SlashCommandBuilder()
 	  .setName("top")
 	  .setNameLocalizations({
-		"zh-TW": "累積q幣排行"
+		"zh-TW": "累積奈奈幣排行"
 	  })
 	  .setDescription("View top total points ranking")
 	  .setDescriptionLocalizations({
-		"zh-TW": "🏆 查看累積q幣前十排行榜"
+		"zh-TW": "🏆 查看累積奈奈幣前十排行榜"
 	  }),
 	  
 	new SlashCommandBuilder()
@@ -234,17 +234,21 @@ async function registerCommands(client) {
 		  )
 	  )
 
-	  .addBooleanOption(o =>
-		o.setName("anonymous")
-		  .setNameLocalizations({
-			"zh-TW": "匿名贈送"
-		  })
-		  .setDescription("Anonymous gift")
-		  .setDescriptionLocalizations({
-			"zh-TW": "🎭 是否匿名送禮"
-		  })
-		  .setRequired(false)
-	  ),
+		.addStringOption(o =>
+		  o.setName("anonymous")
+			.setNameLocalizations({
+			  "zh-TW": "匿名贈送"
+			})
+			.setDescription("Anonymous gift")
+			.setDescriptionLocalizations({
+			  "zh-TW": "🎭 是否匿名送禮"
+			})
+			.setRequired(true)
+			.addChoices(
+			  { name: "是", value: "yes" },
+			  { name: "否", value: "no" }
+			)
+		),
 	  
 	  new SlashCommandBuilder()
 	  .setName("playpay")
@@ -491,7 +495,7 @@ client.on("interactionCreate", async (interaction) => {
 
 			  const embed = new EmbedBuilder()
 				.setColor(0x00ff99)
-				.setTitle("💳 q幣異動通知")
+				.setTitle("💳 奈奈幣異動通知")
 				.setAuthor({
 				  name: `${user.username} 加值成功`
 				})
@@ -499,7 +503,7 @@ client.on("interactionCreate", async (interaction) => {
 				.addFields(
 				  { name: "💰 加值金額", value: `+${amount.toLocaleString()}`, inline: true },
 				  { name: "📊 目前餘額", value: `${newBalance.toLocaleString()}`, inline: true },
-				  { name: "📈 累積q幣", value: `${newTotal.toLocaleString()}`, inline: true }
+				  { name: "📈 累積奈奈幣", value: `${newTotal.toLocaleString()}`, inline: true }
 				)
 				.setFooter({
 				  text: `操作人：${interaction.user.displayName ?? interaction.user.username}`,
@@ -519,7 +523,7 @@ client.on("interactionCreate", async (interaction) => {
 
 			  const embed = new EmbedBuilder()
 				.setColor(0xff4444)
-				.setTitle("💳 q幣異動通知")
+				.setTitle("💳 奈奈幣異動通知")
 				.setAuthor({
 				  name: `${user.username} 扣款成功`
 				})
@@ -547,7 +551,7 @@ client.on("interactionCreate", async (interaction) => {
 				!hasPermission(interaction.member)
 			  ) {
 				return interaction.reply({
-				  content: "❌ 只能查詢自己的q幣",
+				  content: "❌ 只能查詢自己的奈奈幣",
 				  ephemeral: true
 				});
 			  }
@@ -556,9 +560,9 @@ client.on("interactionCreate", async (interaction) => {
 
 			  const embed = new EmbedBuilder()
 				.setColor(0x3399ff)
-				.setTitle("📊 q幣查詢")
+				.setTitle("📊 奈奈幣查詢")
 				.setAuthor({
-				  name: `${user.username} q幣資訊`
+				  name: `${user.username} 奈奈幣資訊`
 				})
 				.setThumbnail(user.displayAvatarURL())
 				.addFields(
@@ -587,7 +591,7 @@ client.on("interactionCreate", async (interaction) => {
 				!hasPermission(interaction.member)
 			  ) {
 				return interaction.reply({
-				  content: "❌ 只能查詢自己的累積q幣",
+				  content: "❌ 只能查詢自己的累積奈奈幣",
 				  ephemeral: true
 				});
 			  }
@@ -596,13 +600,13 @@ client.on("interactionCreate", async (interaction) => {
 
 			  const embed = new EmbedBuilder()
 				.setColor(0x9966ff)
-				.setTitle("📈 累積q幣查詢")
+				.setTitle("📈 累積奈奈幣查詢")
 				.setAuthor({
 				  name: `${targetUser.username} 累積資訊`
 				})
 				.setThumbnail(targetUser.displayAvatarURL())
 				.addFields(
-				  { name: "📈 總累積q幣", value: `${data.total.toLocaleString()}` }
+				  { name: "📈 總累積奈奈幣", value: `${data.total.toLocaleString()}` }
 				)
 				.setFooter({
 				  text: `查詢者：${interaction.user.displayName ?? interaction.user.username}`,
@@ -628,7 +632,7 @@ client.on("interactionCreate", async (interaction) => {
 				})
 				.setThumbnail(user.displayAvatarURL())
 				.addFields(
-				  { name: "📈 累積q幣", value: "已重置為 0" }
+				  { name: "📈 累積奈奈幣", value: "已重置為 0" }
 				)
 				.setFooter({
 				  text: `操作人：${interaction.user.displayName ?? interaction.user.username}`,
@@ -681,7 +685,7 @@ client.on("interactionCreate", async (interaction) => {
 
 			  const embed = new EmbedBuilder()
 				.setColor(0xFFD700)
-				.setTitle("🏆 累積q幣排行 TOP 10")
+				.setTitle("🏆 累積奈奈幣排行 TOP 10")
 				.setDescription(lines.join("\n"))
 				.setTimestamp();
 
@@ -750,7 +754,7 @@ client.on("interactionCreate", async (interaction) => {
 				interaction.options.getString("targets");
 
 			  const anonymous =
-				interaction.options.getBoolean("anonymous") ?? false;
+				interaction.options.getString("anonymous") === "yes";
 
 			  const mentionMatches =
 				targetsInput.match(/<@!?(\d+)>/g);
