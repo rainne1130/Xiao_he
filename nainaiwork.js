@@ -20,7 +20,7 @@ const client = new Client({
 // ===== Firebase =====
 admin.initializeApp({
   credential: admin.credential.applicationDefault(),
-  databaseURL: process.env.FIREBASE_DATABASE_URL
+  databaseURL:https://workingnai-default-rtdb.asia-southeast1.firebasedatabase.app
 });
 
 const db = admin.database();
