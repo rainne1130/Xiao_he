@@ -32,64 +32,133 @@ async function registerCommands(client) {
   const commands = [
 
     new SlashCommandBuilder()
-      .setName("addpoint")
-	  .setNameLocalizations({ "zh-TW": "儲值點數" })
-      .setDescription("加值點數")
-      .addUserOption(o =>
-        o.setName("user")
-         .setDescription("選擇玩家")
-         .setRequired(true)
-      )
-      .addIntegerOption(o =>
-        o.setName("amount")
-         .setDescription("點數")
-         .setRequired(true)
-      ),
+	  .setName("addpoint")
+	  .setNameLocalizations({
+		"zh-TW": "儲值點數"
+	  })
+	  .setDescription("Add points to a user")
+	  .setDescriptionLocalizations({
+		"zh-TW": "💰 為指定玩家增加點數"
+	  })
+	  .addUserOption(o =>
+		o.setName("user")
+		 .setNameLocalizations({
+		   "zh-TW": "選擇闆闆"
+		 })
+		 .setDescription("Target user")
+		 .setDescriptionLocalizations({
+		   "zh-TW": "👤 選擇要儲值的闆闆"
+		 })
+		 .setRequired(true)
+	  )
+	  .addIntegerOption(o =>
+		o.setName("amount")
+		 .setNameLocalizations({
+		   "zh-TW": "增加點數"
+		 })
+		 .setDescription("Amount of points")
+		 .setDescriptionLocalizations({
+		   "zh-TW": "💵 輸入要增加的點數"
+		 })
+		 .setMinValue(1)
+		 .setRequired(true)
+	  ),
 
     new SlashCommandBuilder()
-      .setName("removepoint")
-	  .setNameLocalizations({ "zh-TW": "扣除點數" })
-      .setDescription("扣除點數")
-      .addUserOption(o =>
-        o.setName("user")
-         .setDescription("選擇玩家")
-         .setRequired(true)
-      )
-      .addIntegerOption(o =>
-        o.setName("amount")
-         .setDescription("扣除點數")
-         .setRequired(true)
-      ),
+	  .setName("removepoint")
+	  .setNameLocalizations({
+		"zh-TW": "扣除點數"
+	  })
+	  .setDescription("Remove points from a user")
+	  .setDescriptionLocalizations({
+		"zh-TW": "💸 扣除指定闆闆的點數"
+	  })
+	  .addUserOption(o =>
+		o.setName("user")
+		 .setNameLocalizations({
+		   "zh-TW": "選擇闆闆"
+		 })
+		 .setDescription("Target user")
+		 .setDescriptionLocalizations({
+		   "zh-TW": "👤 選擇要扣款的闆闆"
+		 })
+		 .setRequired(true)
+	  )
+	  .addIntegerOption(o =>
+		o.setName("amount")
+		 .setNameLocalizations({
+		   "zh-TW": "扣除點數"
+		 })
+		 .setDescription("Amount to remove")
+		 .setDescriptionLocalizations({
+		   "zh-TW": "💵 輸入要扣除的點數"
+		 })
+		 .setMinValue(1)
+		 .setMaxValue(1000000)
+		 .setRequired(true)
+	  ),
 
     new SlashCommandBuilder()
-      .setName("point")
-	  .setNameLocalizations({ "zh-TW": "查詢點數餘額" })
-      .setDescription("查詢點數")
-      .addUserOption(o =>
-        o.setName("user")
-         .setDescription("查詢對象")
-         .setRequired(true)
-      ),
+	  .setName("point")
+	  .setNameLocalizations({
+		"zh-TW": "查詢點數餘額"
+	  })
+	  .setDescription("Check your balance")
+	  .setDescriptionLocalizations({
+		"zh-TW": "📊 查詢自己的點數餘額"
+	  })
+	  .addUserOption(o =>
+		o.setName("user")
+		 .setNameLocalizations({
+		   "zh-TW": "闆闆"
+		 })
+		 .setDescription("Target user (self only)")
+		 .setDescriptionLocalizations({
+		   "zh-TW": "👤 選擇查詢對象"
+		 })
+		 .setRequired(true)
+	  ),
 
     new SlashCommandBuilder()
-      .setName("totalpoint")
-	  .setNameLocalizations({ "zh-TW": "查詢總儲值金額" })
-      .setDescription("查詢累積點數")
-      .addUserOption(o =>
-        o.setName("user")
-         .setDescription("查詢對象")
-         .setRequired(true)
-      ),
+	  .setName("totalpoint")
+	  .setNameLocalizations({
+		"zh-TW": "查詢總儲值金額"
+	  })
+	  .setDescription("Check total points")
+	  .setDescriptionLocalizations({
+		"zh-TW": "📈 查詢自己的累積點數"
+	  }),
 
     new SlashCommandBuilder()
-      .setName("cleartotal")
-	  .setNameLocalizations({ "zh-TW": "清除總儲值金額" })
-      .setDescription("清除累積點數")
-      .addUserOption(o =>
-        o.setName("user")
-         .setDescription("目標玩家")
-         .setRequired(true)
-      )
+	  .setName("cleartotal")
+	  .setNameLocalizations({
+		"zh-TW": "清除總儲值金額"
+	  })
+	  .setDescription("Reset user's total points")
+	  .setDescriptionLocalizations({
+		"zh-TW": "🧹 清除指定闆闆的累積點數"
+	  })
+	  .addUserOption(o =>
+		o.setName("user")
+		 .setNameLocalizations({
+		   "zh-TW": "選擇闆闆"
+		 })
+		 .setDescription("Target user")
+		 .setDescriptionLocalizations({
+		   "zh-TW": "👤 選擇要清除的闆闆"
+		 })
+		 .setRequired(true)
+	  ),
+	  
+	new SlashCommandBuilder()
+	  .setName("top")
+	  .setNameLocalizations({
+		"zh-TW": "累積點數排行"
+	  })
+	  .setDescription("View top total points ranking")
+	  .setDescriptionLocalizations({
+		"zh-TW": "🏆 查看累積點數前十排行榜"
+	  })
 
   ].map(c => c.toJSON());
 
@@ -175,6 +244,13 @@ client.on("interactionCreate", async (interaction) => {
   try {
 
     if (cmd === "addpoint") {
+		
+		if (!hasPermission(interaction.member)) {
+		return interaction.reply({
+		  content: "❌ 無權限",
+		  ephemeral: true
+		});
+	  }
 	  const amount = interaction.options.getInteger("amount");
 
 	  const { newBalance, newTotal } = await addPoint(user.id, amount);
@@ -202,6 +278,13 @@ client.on("interactionCreate", async (interaction) => {
 	}
 
     if (cmd === "removepoint") {
+		
+		if (!hasPermission(interaction.member)) {
+		return interaction.reply({
+		  content: "❌ 無權限",
+		  ephemeral: true
+		});
+	  }
 	  const amount = interaction.options.getInteger("amount");
 
 	  const newBalance = await removePoint(user.id, amount);
@@ -229,6 +312,15 @@ client.on("interactionCreate", async (interaction) => {
 	}
 
     if (cmd === "point") {
+
+	  // ❌ 禁止查別人
+	  if (user.id !== interaction.user.id) {
+		return interaction.reply({
+		  content: "❌ 只能查詢自己的點數",
+		  ephemeral: true
+		});
+	  }
+
 	  const data = await getUser(user.id);
 
 	  const embed = new EmbedBuilder()
@@ -239,7 +331,7 @@ client.on("interactionCreate", async (interaction) => {
 		})
 		.setThumbnail(user.displayAvatarURL())
 		.addFields(
-		  { name: "💰 目前餘額", value: `${data.balance.toLocaleString()}`, inline: true }
+		  { name: "💰 目前餘額", value: `${data.balance.toLocaleString()}` }
 		)
 		.setFooter({
 		  text: `查詢者：${interaction.user.displayName ?? interaction.user.username}`,
@@ -254,6 +346,14 @@ client.on("interactionCreate", async (interaction) => {
 	}
 
     if (cmd === "totalpoint") {
+
+	  if (user.id !== interaction.user.id) {
+		return interaction.reply({
+		  content: "❌ 只能查詢自己的累積點數",
+		  ephemeral: true
+		});
+	  }
+
 	  const data = await getUser(user.id);
 
 	  const embed = new EmbedBuilder()
@@ -273,11 +373,19 @@ client.on("interactionCreate", async (interaction) => {
 		.setTimestamp();
 
 	  return interaction.reply({
-		embeds: [embed]
+		embeds: [embed],
+		ephemeral: true
 	  });
 	}
 
     if (cmd === "cleartotal") {
+		
+		if (!hasPermission(interaction.member)) {
+		return interaction.reply({
+		  content: "❌ 無權限",
+		  ephemeral: true
+		});
+	  }
 	  await clearTotal(user.id);
 
 	  const embed = new EmbedBuilder()
@@ -297,7 +405,64 @@ client.on("interactionCreate", async (interaction) => {
 		.setTimestamp();
 
 	  return interaction.reply({
-		embeds: [embed]
+		embeds: [embed],
+		ephemeral: true
+	  });
+	}
+	
+	if (cmd === "top") {
+
+	  if (!hasPermission(interaction.member)) {
+		return interaction.reply({
+		  content: "❌ 無權限",
+		  ephemeral: true
+		});
+	  }
+
+	  const ref = db.ref("users");
+	  const snap = await ref.once("value");
+	  const data = snap.val() || {};
+
+	  const list = Object.entries(data)
+		.map(([id, v]) => ({
+		  id,
+		  total: v.total || 0
+		}))
+		.filter(v => v.total > 0);
+
+	  list.sort((a, b) => b.total - a.total);
+
+	  const top10 = list.slice(0, 10);
+
+	  if (top10.length === 0) {
+		return interaction.reply({
+		  content: "📭 目前沒有任何累積資料",
+		  ephemeral: true
+		});
+	  }
+
+	  const lines = await Promise.all(
+		top10.map(async (u, i) => {
+		  let name = `未知玩家`;
+
+		  try {
+			const member = await interaction.guild.members.fetch(u.id);
+			name = member.displayName;
+		  } catch {}
+
+		  return `**${i + 1}.** ${name} ｜ ${u.total.toLocaleString()}`;
+		})
+	  );
+
+	  const embed = new EmbedBuilder()
+		.setColor(0xFFD700)
+		.setTitle("🏆 累積點數排行 TOP 10")
+		.setDescription(lines.join("\n"))
+		.setTimestamp();
+
+	  return interaction.reply({
+		embeds: [embed],
+		ephemeral: true
 	  });
 	}
 
