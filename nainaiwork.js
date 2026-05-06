@@ -33,6 +33,7 @@ async function registerCommands(client) {
 
     new SlashCommandBuilder()
       .setName("addpoint")
+	  .setNameLocalizations({ "zh-TW": "儲值點數" })
       .setDescription("加值點數")
       .addUserOption(o =>
         o.setName("user")
@@ -47,6 +48,7 @@ async function registerCommands(client) {
 
     new SlashCommandBuilder()
       .setName("removepoint")
+	  .setNameLocalizations({ "zh-TW": "扣除點數" })
       .setDescription("扣除點數")
       .addUserOption(o =>
         o.setName("user")
@@ -61,6 +63,7 @@ async function registerCommands(client) {
 
     new SlashCommandBuilder()
       .setName("point")
+	  .setNameLocalizations({ "zh-TW": "查詢點數餘額" })
       .setDescription("查詢點數")
       .addUserOption(o =>
         o.setName("user")
@@ -70,6 +73,7 @@ async function registerCommands(client) {
 
     new SlashCommandBuilder()
       .setName("totalpoint")
+	  .setNameLocalizations({ "zh-TW": "查詢總儲值金額" })
       .setDescription("查詢累積點數")
       .addUserOption(o =>
         o.setName("user")
@@ -79,6 +83,7 @@ async function registerCommands(client) {
 
     new SlashCommandBuilder()
       .setName("cleartotal")
+	  .setNameLocalizations({ "zh-TW": "清除總儲值金額" })
       .setDescription("清除累積點數")
       .addUserOption(o =>
         o.setName("user")
@@ -170,59 +175,131 @@ client.on("interactionCreate", async (interaction) => {
   try {
 
     if (cmd === "addpoint") {
-      const amount = interaction.options.getInteger("amount");
+	  const amount = interaction.options.getInteger("amount");
 
-      const { newBalance, newTotal } = await addPoint(user.id, amount);
+	  const { newBalance, newTotal } = await addPoint(user.id, amount);
 
-      return interaction.reply({
-        embeds: [
-          new EmbedBuilder()
-            .setColor(0x00ff99)
-            .setAuthor({ name: `${user.username} 加值成功`, iconURL: user.displayAvatarURL() })
-            .addFields(
-              { name: "💰 加值", value: `+${amount}`, inline: true },
-              { name: "📊 餘額", value: `${newBalance}`, inline: true },
-              { name: "📈 累積", value: `${newTotal}`, inline: true }
-            )
-        ]
-      });
-    }
+	  const embed = new EmbedBuilder()
+		.setColor(0x00ff99)
+		.setTitle("💳 點數異動通知")
+		.setAuthor({
+		  name: `${user.username} 加值成功`
+		})
+		.setThumbnail(user.displayAvatarURL())
+		.addFields(
+		  { name: "💰 加值金額", value: `+${amount.toLocaleString()}`, inline: true },
+		  { name: "📊 目前餘額", value: `${newBalance.toLocaleString()}`, inline: true },
+		  { name: "📈 累積點數", value: `${newTotal.toLocaleString()}`, inline: true }
+		)
+		.setFooter({
+		  text: `操作人：${interaction.user.displayName ?? interaction.user.username}`,
+		  iconURL: interaction.user.displayAvatarURL()
+		})
+		.setTimestamp();
+	  return interaction.reply({
+		embeds: [embed]
+	  });
+	}
 
     if (cmd === "removepoint") {
-      const amount = interaction.options.getInteger("amount");
+	  const amount = interaction.options.getInteger("amount");
 
-      const newBalance = await removePoint(user.id, amount);
+	  const newBalance = await removePoint(user.id, amount);
 
-      return interaction.reply({
-        embeds: [
-          new EmbedBuilder()
-            .setColor(0xff4444)
-            .setAuthor({ name: `${user.username} 扣款成功`, iconURL: user.displayAvatarURL() })
-            .addFields(
-              { name: "💸 扣款", value: `-${amount}`, inline: true },
-              { name: "📊 餘額", value: `${newBalance}`, inline: true }
-            )
-        ]
-      });
-    }
+	  const embed = new EmbedBuilder()
+		.setColor(0xff4444)
+		.setTitle("💳 點數異動通知")
+		.setAuthor({
+		  name: `${user.username} 扣款成功`
+		})
+		.setThumbnail(user.displayAvatarURL())
+		.addFields(
+		  { name: "💸 扣款金額", value: `-${amount.toLocaleString()}`, inline: true },
+		  { name: "📊 目前餘額", value: `${newBalance.toLocaleString()}`, inline: true }
+		)
+		.setFooter({
+		  text: `操作人：${interaction.user.displayName ?? interaction.user.username}`,
+		  iconURL: interaction.user.displayAvatarURL()
+		})
+		.setTimestamp();
+
+	  return interaction.reply({
+		embeds: [embed]
+	  });
+	}
 
     if (cmd === "point") {
-      const data = await getUser(user.id);
-      return interaction.reply({
-        content: `💰 ${user.username} 點數：${data.balance}`,
-        ephemeral: true
-      });
-    }
+	  const data = await getUser(user.id);
+
+	  const embed = new EmbedBuilder()
+		.setColor(0x3399ff)
+		.setTitle("📊 點數查詢")
+		.setAuthor({
+		  name: `${user.username} 點數資訊`
+		})
+		.setThumbnail(user.displayAvatarURL())
+		.addFields(
+		  { name: "💰 目前餘額", value: `${data.balance.toLocaleString()}`, inline: true }
+		)
+		.setFooter({
+		  text: `查詢者：${interaction.user.displayName ?? interaction.user.username}`,
+		  iconURL: interaction.user.displayAvatarURL()
+		})
+		.setTimestamp();
+
+	  return interaction.reply({
+		embeds: [embed],
+		ephemeral: true
+	  });
+	}
 
     if (cmd === "totalpoint") {
-      const data = await getUser(user.id);
-      return interaction.reply(`📈 累積點數：${data.total}`);
-    }
+	  const data = await getUser(user.id);
+
+	  const embed = new EmbedBuilder()
+		.setColor(0x9966ff)
+		.setTitle("📈 累積點數查詢")
+		.setAuthor({
+		  name: `${user.username} 累積資訊`
+		})
+		.setThumbnail(user.displayAvatarURL())
+		.addFields(
+		  { name: "📈 總累積點數", value: `${data.total.toLocaleString()}` }
+		)
+		.setFooter({
+		  text: `查詢者：${interaction.user.displayName ?? interaction.user.username}`,
+		  iconURL: interaction.user.displayAvatarURL()
+		})
+		.setTimestamp();
+
+	  return interaction.reply({
+		embeds: [embed]
+	  });
+	}
 
     if (cmd === "cleartotal") {
-      await clearTotal(user.id);
-      return interaction.reply(`🧹 已清除累積點數`);
-    }
+	  await clearTotal(user.id);
+
+	  const embed = new EmbedBuilder()
+		.setColor(0xff9900)
+		.setTitle("🧹 系統操作通知")
+		.setAuthor({
+		  name: `${user.username} 累積已清除`
+		})
+		.setThumbnail(user.displayAvatarURL())
+		.addFields(
+		  { name: "📈 累積點數", value: "已重置為 0" }
+		)
+		.setFooter({
+		  text: `操作人：${interaction.user.displayName ?? interaction.user.username}`,
+		  iconURL: interaction.user.displayAvatarURL()
+		})
+		.setTimestamp();
+
+	  return interaction.reply({
+		embeds: [embed]
+	  });
+	}
 
   } catch (err) {
     return interaction.reply({
