@@ -754,7 +754,7 @@ client.on("interactionCreate", async (interaction) => {
 			  const embed = new EmbedBuilder()
 				.setColor(0xFFD700)
 				.setDescription(
-			`🎁 特別感謝 ${sender.username} 送給 ${targetMentions.join(" ")} 的 ${giftName} !!!
+			`🎁 特別感謝 ${sender} 送給 ${targetMentions.join(" ")} 的 ${giftName} !!!
 			──────────────
 
 			${giftData.text}`
