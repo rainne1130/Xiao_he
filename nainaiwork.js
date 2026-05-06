@@ -505,7 +505,7 @@ client.on("interactionCreate", async (interaction) => {
 
 	  return interaction.reply({
 		embeds: [embed],
-		components: [row]
+		components: [row1, row2]
 	  });
 	}
 
