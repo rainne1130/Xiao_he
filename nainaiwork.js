@@ -464,7 +464,7 @@ async function generateTranscript(channel) {
 client.once("ready", async () => {
   console.log(`Bot 上線: ${client.user.tag}`);
 
-  //await registerCommands(client); // 第一次開著
+  await registerCommands(client); // 第一次開著
 });
 
 // ===== 指令處理 =====
@@ -1645,10 +1645,14 @@ client.on("interactionCreate", async (interaction) => {
 			// ===== 評價 UI =====
 			const embed = new EmbedBuilder()
 			  .setColor(0xFFD700)
+			  .setDescription(
+				  isAnonymous
+					? "💖 感謝匿名闆闆的超級評價!!"
+					: `💖 感謝闆闆 <@${interaction.user.id}> 的超級評價!!`
+				)
 			  .setAuthor({
 				name: `⭐ ${stars} 星評價`,
 			  })
-			  .setThumbnail(member.user.displayAvatarURL())
 			  .addFields(
 				{ name: "👤 陪陪名稱", value: companion },
 				{ name: "⭐ 闆闆評分", value: `${"⭐".repeat(stars)}` },
@@ -1663,6 +1667,10 @@ client.on("interactionCreate", async (interaction) => {
 				  : interaction.user.displayAvatarURL()
 			  })
 			  .setTimestamp();
+
+			if (!isAnonymous) {
+			  embed.setThumbnail(member.user.displayAvatarURL());
+			}
 
 			const reviewChannel = await interaction.guild.channels.fetch("1489186836579356702");
 
