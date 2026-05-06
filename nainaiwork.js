@@ -190,10 +190,10 @@ async function registerCommands(client) {
 		 .setDescription("送禮者")
 		 .setRequired(true)
 	  )
-	  .addUserOption(o =>
-		o.setName("target")
-		 .setDescription("接收者")
-		 .setRequired(true)
+	  .addStringOption(o =>
+	    o.setName("targets")
+	     .setDescription("請@多位陪陪")
+	     .setRequired(true)
 	  )
 	  .addStringOption(o =>
 		o.setName("gift")
@@ -675,7 +675,16 @@ client.on("interactionCreate", async (interaction) => {
 			if (cmd === "gift") {
 
 			  const sender = interaction.options.getUser("sender");
-			  const target = interaction.options.getUser("target");
+			  const targetsInput = interaction.options.getString("targets");
+			  const mentionMatches = targetsInput.match(/<@!?(\d+)>/g);
+
+			  if (!mentionMatches) {
+				return interaction.reply({
+				  content: "❌ 請至少 @ 一位陪陪",
+				  ephemeral: true
+				});
+			  }
+
 			  const giftName = interaction.options.getString("gift");
 
 			  const giftData = GIFTS[giftName];
@@ -687,16 +696,41 @@ client.on("interactionCreate", async (interaction) => {
 				});
 			  }
 
+			  const targetNames = [];
+			  const targetMentions = [];
+
+			  for (const mention of mentionMatches) {
+
+				const id = mention.replace(/\D/g, "");
+
+				const member = await interaction.guild.members
+				  .fetch(id)
+				  .catch(() => null);
+
+				if (member) {
+
+				  targetNames.push(member.user.username);
+				  targetMentions.push(`<@${id}>`);
+				}
+			  }
+
+			  // ===== 禮物 UI =====
 			  const embed = new EmbedBuilder()
 				.setColor(0xFFD700)
-				.setTitle(`🎁 特別感謝 ${sender} 送給 ${target} 的 ${giftName} !!!`)
-				.setDescription(giftData.text)
+				.setDescription(
+			`🎁 特別感謝 ${sender.username} 送給 ${targetMentions.join(" ")} 的 ${giftName} !!!
+			──────────────
+
+			${giftData.text}`
+				)
 				.setThumbnail(sender.displayAvatarURL())
 				.setImage(giftData.image)
 				.setTimestamp();
 
+			  // ===== 頻道 =====
 			  const channel = await interaction.guild.channels.fetch(GIFT_CHANNEL_ID);
 
+			  // ===== 發送 =====
 			  await channel.send({
 				embeds: [embed]
 			  });
