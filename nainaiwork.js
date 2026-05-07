@@ -233,8 +233,7 @@ async function registerCommands(client) {
 			{ name: "💍 鑽戒", value: "鑽戒" },
 			{ name: "🏎️ 跑車", value: "跑車" },
 			{ name: "🚀 火箭", value: "火箭" },
-			{ name: "🏰 城堡", value: "城堡" },
-			{ name: "💰 揮金如土", value: "揮金如土" },
+			{ name: "🏰 城堡", value: "城堡" }
 		  )
 	  )
 
@@ -437,15 +436,6 @@ const GIFTS = {
 住進夢想中的可愛城堡
 被好運跟寵愛包圍💖
 老闆：你值得最好的✨`
-  },
-  
-  "揮金如土": {
-    image: "https://cdn.discordapp.com/attachments/1488922204673544296/1501912800174276648/8f662b2cd143431a.gif?ex=69fdcccb&is=69fc7b4b&hm=cacdeeb43cdb89e1eb1ba56de78708b8cadda2d929671629c4cf2a49f0e8f734&",
-	text:
-`今天直接豪氣拉滿✨
-揮金如土的瞬間帥到發光💰
-金光灑下的每一刻都超有排面
-老闆：快樂就是要大手筆送出去🔥`
   }
 };
 
