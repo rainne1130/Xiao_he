@@ -505,7 +505,7 @@ async function generateTranscript(channel) {
 client.once("ready", async () => {
   console.log(`Bot 上線: ${client.user.tag}`);
 
-  //await registerCommands(client); // 第一次開著
+  await registerCommands(client); // 第一次開著
 });
 
 // ===== 指令處理 =====
