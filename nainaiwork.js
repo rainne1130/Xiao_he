@@ -937,7 +937,7 @@ client.on("interactionCreate", async (interaction) => {
 			if (cmd === "review") {
 
 			  // ===== 權限 =====
-			  if (!interaction.member.roles.cache.has(REVIEW_ROLE_ID)) {
+			  if (!interaction.member.roles.cache.has(SERVICE_ROLE_ID)) {
 				return interaction.reply({
 				  content: "❌ 您沒有權限使用此功能",
 				  ephemeral: true
