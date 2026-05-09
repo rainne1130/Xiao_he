@@ -10,6 +10,7 @@ const admin = require("firebase-admin");
 // ===== 設定 =====
 const SERVICE_ROLE_ID = "1490342166910996510";
 const GUILD_ID = "1488912636040052869";
+const REVIEW_ROLE_ID = "1490593115466240000";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
@@ -281,6 +282,16 @@ async function registerCommands(client) {
 	  .setDescription("JKOPay")
 	  .setDescriptionLocalizations({
 		"zh-TW": "💰 發送街口付款資訊"
+	  }),
+	  
+	new SlashCommandBuilder()
+	  .setName("review")
+	  .setNameLocalizations({
+		"zh-TW": "評價系統"
+	  })
+	  .setDescription("Open review system")
+	  .setDescriptionLocalizations({
+		"zh-TW": "⭐ 開啟評價系統"
 	  }),
 
   ].map(c => c.toJSON());
@@ -922,6 +933,49 @@ client.on("interactionCreate", async (interaction) => {
 				embeds: [embed]
 			  });
 			}
+			
+			if (cmd === "review") {
+
+			  // ===== 權限 =====
+			  if (!interaction.member.roles.cache.has(REVIEW_ROLE_ID)) {
+				return interaction.reply({
+				  content: "❌ 您沒有權限使用此功能",
+				  ephemeral: true
+				});
+			  }
+
+			  const row = new ActionRowBuilder().addComponents(
+				new ButtonBuilder()
+				  .setCustomId("staff_rate_1")
+				  .setLabel("⭐")
+				  .setStyle(ButtonStyle.Secondary),
+
+				new ButtonBuilder()
+				  .setCustomId("staff_rate_2")
+				  .setLabel("⭐⭐")
+				  .setStyle(ButtonStyle.Secondary),
+
+				new ButtonBuilder()
+				  .setCustomId("staff_rate_3")
+				  .setLabel("⭐⭐⭐")
+				  .setStyle(ButtonStyle.Secondary),
+
+				new ButtonBuilder()
+				  .setCustomId("staff_rate_4")
+				  .setLabel("⭐⭐⭐⭐")
+				  .setStyle(ButtonStyle.Secondary),
+
+				new ButtonBuilder()
+				  .setCustomId("staff_rate_5")
+				  .setLabel("⭐⭐⭐⭐⭐")
+				  .setStyle(ButtonStyle.Success)
+			  );
+
+			  return interaction.reply({
+				content: "✨請選擇評價星數✨",
+				components: [row]
+			  });
+			}
 		} catch (err) {
 			  console.error(err);
 
@@ -1361,6 +1415,52 @@ client.on("interactionCreate", async (interaction) => {
 			  console.error("延遲刪除錯誤:", err);
 			}
 		  }, DELAY);
+		}
+		
+		if (/^staff_rate_[1-5]$/.test(interaction.customId)) {
+
+		  // ===== 權限 =====
+		  if (!interaction.member.roles.cache.has(REVIEW_ROLE_ID)) {
+			return interaction.reply({
+			  content: "❌ 您沒有權限使用此功能",
+			  ephemeral: true
+			});
+		  }
+
+		  const stars = interaction.customId.split("_")[2];
+
+		  const modal = new ModalBuilder()
+			.setCustomId(`staff_modal_rating_${stars}`)
+			.setTitle("📊 評價系統");
+
+		  const input1 = new TextInputBuilder()
+			.setCustomId("companion")
+			.setLabel("陪陪名稱")
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder("奈奈")
+			.setRequired(true);
+
+		  const input2 = new TextInputBuilder()
+			.setCustomId("feedback")
+			.setLabel("評價內容")
+			.setStyle(TextInputStyle.Paragraph)
+			.setPlaceholder("請輸入評價內容")
+			.setRequired(true);
+
+		  const input3 = new TextInputBuilder()
+			.setCustomId("anonymous")
+			.setLabel("是否匿名評價？（是/否）")
+			.setStyle(TextInputStyle.Short)
+			.setPlaceholder("是 或 否")
+			.setRequired(true);
+
+		  modal.addComponents(
+			new ActionRowBuilder().addComponents(input1),
+			new ActionRowBuilder().addComponents(input2),
+			new ActionRowBuilder().addComponents(input3)
+		  );
+
+		  return interaction.showModal(modal);
 		}
 	}
 		
@@ -1900,6 +2000,79 @@ client.on("interactionCreate", async (interaction) => {
 		  return interaction.editReply({
 			content: `✅ 便利貼已建立：${channel}`
 		  });
+		}
+		
+		if (interaction.customId.startsWith("staff_modal_rating_")) {
+
+		  await interaction.deferReply({ ephemeral: true });
+
+		  try {
+
+			const stars = interaction.customId.split("_")[3];
+
+			const companion =
+			  interaction.fields.getTextInputValue("companion");
+
+			const feedback =
+			  interaction.fields.getTextInputValue("feedback");
+
+			const anonymousInput =
+			  interaction.fields.getTextInputValue("anonymous");
+
+			const isAnonymous = ["是", "yes", "y", "1"].includes(
+			  anonymousInput.trim().toLowerCase()
+			);
+
+			const embed = new EmbedBuilder()
+			  .setColor(0xFFD700)
+			  .setDescription(
+				isAnonymous
+				  ? "💖 感謝匿名闆闆的超級評價!!"
+				  : `💖 感謝闆闆 <@${interaction.user.id}> 的超級評價!!`
+			  )
+			  .setAuthor({
+				name: `⭐ ${stars} 星評價`
+			  })
+			  .addFields(
+				{ name: "👤 陪陪名稱", value: companion },
+				{ name: "⭐ 闆闆評分", value: `${"⭐".repeat(stars)}` },
+				{ name: "📝 評價內容", value: feedback }
+			  )
+			  .setFooter({
+				text: isAnonymous
+				  ? "評價人：匿名闆闆"
+				  : `評價人：${interaction.user.username}`,
+				iconURL: isAnonymous
+				  ? null
+				  : interaction.user.displayAvatarURL()
+			  })
+			  .setTimestamp();
+
+			if (!isAnonymous) {
+			  embed.setThumbnail(
+				interaction.user.displayAvatarURL()
+			  );
+			}
+
+			const reviewChannel =
+			  await interaction.guild.channels.fetch("1489186836579356702");
+
+			await reviewChannel.send({
+			  embeds: [embed]
+			});
+
+			return interaction.editReply({
+			  content: "✅ 評價已送出"
+			});
+
+		  } catch (err) {
+
+			console.error(err);
+
+			return interaction.editReply({
+			  content: `❌ 發生錯誤：${err.message}`
+			});
+		  }
 		}
 	}
 });
