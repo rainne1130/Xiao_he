@@ -1486,7 +1486,7 @@ client.on("interactionCreate", async (interaction) => {
 			const channel = await interaction.guild.channels.create({
 			  name: `遊戲訂單_${code}`,
 			  type: ChannelType.GuildText,
-			  parent: "1491428115258282205",
+			  parent: "1504159098395037776",
 			  permissionOverwrites: [
 				// ❌ 預設所有人看不到
 				{
@@ -1581,7 +1581,7 @@ client.on("interactionCreate", async (interaction) => {
 		  const channel = await interaction.guild.channels.create({
 			name: `語音訂單_${code}`,
 			type: ChannelType.GuildText,
-			parent: "1491428115258282205",
+			parent: "1504159098395037776",
 			permissionOverwrites: [
 			  {
 				id: interaction.guild.roles.everyone.id,
@@ -1660,7 +1660,7 @@ client.on("interactionCreate", async (interaction) => {
 		  const channel = await interaction.guild.channels.create({
 			name: `代打訂單_${code}`,
 			type: ChannelType.GuildText,
-			parent: "1491428115258282205",
+			parent: "1504159098395037776",
 			permissionOverwrites: [
 			  {
 				id: interaction.guild.roles.everyone.id,
@@ -1843,7 +1843,7 @@ client.on("interactionCreate", async (interaction) => {
 		  const channel = await interaction.guild.channels.create({
 			name: `禮物訂單_${code}`,
 			type: ChannelType.GuildText,
-			parent: "1491428115258282205",
+			parent: "1504159098395037776",
 			permissionOverwrites: [
 			  {
 				id: interaction.guild.roles.everyone.id,
@@ -1934,7 +1934,7 @@ client.on("interactionCreate", async (interaction) => {
 		  const channel = await interaction.guild.channels.create({
 			name: `便利貼訂單_${username}`,
 			type: ChannelType.GuildText,
-			parent: "1491428115258282205",
+			parent: "1504159098395037776",
 			permissionOverwrites: [
 			  {
 				id: interaction.guild.roles.everyone.id,
