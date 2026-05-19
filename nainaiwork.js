@@ -601,7 +601,7 @@ client.on("messageCreate", async (message) => {
 	  return message.reply("真的是法克...");
   }
  if (content.includes("鴨鴨")) {
-	return message.reply("他我媽，有事?");
+	return message.reply("他我紫嘖，有事?(氣泡音");
   }
 	if (content.includes("寶貝")) {
 	return message.reply("在這!!");
