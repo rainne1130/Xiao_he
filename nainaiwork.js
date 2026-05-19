@@ -591,14 +591,20 @@ client.on("messageCreate", async (message) => {
   if (content.includes("凜夜")) {
     return message.reply("感謝凜夜葛格即將送我的罐罐!!");
   }
-  if (content.includes("小賀")) {
- return message.reply("???怎麼了???要送我罐罐了嗎??");
+  if (content === "小賀") {
+ return message.reply("怎麼了?要送我罐罐了嗎??");
   }
   if (content.includes("汪")) {
  return message.reply("你在狗叫什麼?");
   }
   if (content.includes("法克")) {
 	  return message.reply("真的是法克...");
+  }
+ if (content.includes("鴨鴨")) {
+	return message.reply("他我媽，有事?");
+  }
+	if (content.includes("寶貝")) {
+	return message.reply("在這!!");
   }
 
 
