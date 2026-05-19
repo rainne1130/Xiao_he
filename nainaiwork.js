@@ -234,7 +234,12 @@ async function registerCommands(client) {
 			{ name: "💍 鑽戒", value: "鑽戒" },
 			{ name: "🏎️ 跑車", value: "跑車" },
 			{ name: "🚀 火箭", value: "火箭" },
-			{ name: "🏰 城堡", value: "城堡" }
+			{ name: "🏰 城堡", value: "城堡" },
+			{ name: "🧋 夏天的第一杯奶茶", value: "夏天的第一杯奶茶" },
+			{ name: "🍫 心動巧克力", value: "心動巧克力" },
+			{ name: "🐻 小熊玩偶", value: "小熊玩偶" },
+			{ name: "💗 情侶手鍊", value: "情侶手鍊" },
+			{ name: "🌹 999朵玫瑰花", value: "999朵玫瑰花" }
 		  )
 	  )
 
@@ -447,7 +452,59 @@ const GIFTS = {
 住進夢想中的可愛城堡
 被好運跟寵愛包圍💖
 老闆：你值得最好的✨`
-  }
+  },
+  
+  "夏天的第一杯奶茶": {
+    image: "https://cdn.discordapp.com/attachments/1506322515310546944/1506322515591696385/IMG_0563-removebg-preview.png?ex=6a0dd7a9&is=6a0c8629&hm=282d642fa5622c36d79528020d479129c7688d4a4a0cf8951803f995adf12e85&",
+    text:
+`不是奶茶不甜🥺
+是想陪你過夏天的人還沒出現✨
+
+送你一杯奶茶🧋💕
+順便偷偷說一句：
+「今天也想陪著你(｡･ω･｡)ﾉ♡」`
+  },
+  
+  "心動巧克力": {
+    image: "https://cdn.discordapp.com/attachments/1506322777827836134/1506322778104528896/IMG_0560-removebg-preview.png?ex=6a0dd7e8&is=6a0c8668&hm=602bbdee211f7df77bb028eef49d6260b3550a5b2395a105192efb401c416e31&",
+    text:
+`甜甜的不只有巧克力✨
+還有那份偷偷偏心的喜歡
+
+一口巧克力 一點心動🍫
+今天的浪漫，由我送你💕`
+  },
+  
+  "小熊玩偶": {
+    image: "https://cdn.discordapp.com/attachments/1506322888708325436/1506322888926560287/IMG_0559-removebg-preview.png?ex=6a0dd802&is=6a0c8682&hm=9168900c7b764a7d64a0d21820596eadd6a2b8ef8b26eb4b8876b4f08147a361&",
+    text:
+`把小熊送給你🧸💗
+以後它替我陪著你✨
+
+難過的時候抱一下
+想我的時候也抱一下(｡•ㅅ•｡)♡`
+  },
+  
+  "情侶手鍊": {
+    image: "https://cdn.discordapp.com/attachments/1506322978831335516/1506322979003306064/IMG_0581-removebg-preview.png?ex=6a0dd818&is=6a0c8698&hm=1eeafb4e8d211950ca3fc9766022d9c68b6cca9ff0228d5e8e9b8f806fde089f&",
+    text:
+`手鍊會戴在手上✨
+而你會留在心上💗
+
+不一定要成為戀人
+但至少…想成為你的特別(๑˃̵ᴗ˂̵)و♡`
+  },
+  
+  "999朵玫瑰花": {
+    image: "https://cdn.discordapp.com/attachments/1506323069659255030/1506323070200316004/IMG_0575-removebg-preview.png?ex=6a0dd82e&is=6a0c86ae&hm=dab4f70fd3d201715d6b05662e082bcb5d19ff768d8d2e4bc92b21cd97c32f8b&",
+    text:
+`不是只有玫瑰浪漫🌹
+而是送花的人剛好是你💗
+
+999朵玫瑰代表著👇
+今天的偏愛、心動與例外
+全部都想送給你(｡･ω･｡)ﾉ♡`
+  },
 };
 
 const fs = require("fs");
@@ -850,7 +907,6 @@ client.on("interactionCreate", async (interaction) => {
 				.setDescription(
 			`🎁 特別感謝 ${senderDisplay} 送給 ${targetMentions.join(" ")} 的 ${giftName} !!!
 
-			─────────────────────
 
 			${giftData.text}`
 				)
