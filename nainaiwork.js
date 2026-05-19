@@ -591,6 +591,10 @@ client.on("messageCreate", async (message) => {
   if (content.includes("凜夜")) {
     return message.reply("感謝凜夜葛格即將送我的罐罐!!");
   }
+  if (content.includes("小賀")) {
+ return message.reply("???怎麼了???要送我罐罐了嗎??");
+  }
+
 
 });
 
