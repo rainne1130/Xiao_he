@@ -13,7 +13,11 @@ const GUILD_ID = "1488912636040052869";
 const REVIEW_ROLE_ID = "1490593115466240000";
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
 });
 
 // ===== Firebase =====
@@ -563,6 +567,30 @@ client.once("ready", async () => {
   console.log(`Bot 上線: ${client.user.tag}`);
 
   await registerCommands(client); // 第一次開著
+});
+// ===== 自動回覆 =====
+client.on("messageCreate", async (message) => {
+
+  // 不偵測機器人
+  if (message.author.bot) return;
+
+  // 只限指定頻道
+  if (message.channel.id !== "1488912637243822095") return;
+
+  // 去除前後空白
+  const content = message.content.trim();
+
+  // 必須完全符合：
+  // 🪡 🧶 🪵
+  if (content === "🪡 🧶 🪵") {
+    return message.reply("羨慕個屁!");
+  }
+
+  // 偵測普天同慶
+  if (content.includes("普天同慶")) {
+    return message.reply("普天同慶的啦!!");
+  }
+
 });
 
 // ===== 指令處理 =====
