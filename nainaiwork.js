@@ -562,11 +562,11 @@ async function generateTranscript(channel) {
   return filePath;
 }
 
-// ===== 上線 ======================================================================
+// ===== 上線 =====
 client.once("ready", async () => {
   console.log(`Bot 上線: ${client.user.tag}`);
 
-  //await registerCommands(client); // 第一次開著
+  await registerCommands(client); // 第一次開著
 });
 // ===== 自動回覆 =====
 client.on("messageCreate", async (message) => {
@@ -611,8 +611,45 @@ client.on("messageCreate", async (message) => {
 
 	  return message.reply({
 		content: "520快樂",
-		files: ["https://cdn.discordapp.com/attachments/1488922204673544296/1506365743783084142/IMG_4676.png?ex=6a0dffec&is=6a0cae6c&hm=743b7811deaed9fb49821d21a221400a9c2f5dc93ed85016c2dde3b126b6b120&"]
+		files: ["https://cdn.discordapp.com/attachments/1488922204673544296/1506369478043242676/image.png?ex=6a0e0366&is=6a0cb1e6&hm=fe400ce56c216379e9683d7a83f7ee2a097938e3ef80aa579ee38cfec689dc91&"]
 	  });
+	}
+	
+	if (content.includes("抽小賀")) {
+
+	  // 圖片池
+	  const images = [
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506369478043242676/image.png?ex=6a0e0366&is=6a0cb1e6&hm=fe400ce56c216379e9683d7a83f7ee2a097938e3ef80aa579ee38cfec689dc91&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506369494145171537/image.png?ex=6a0e036a&is=6a0cb1ea&hm=6e5d0853cd967c59fe07db1084591136ac5b89cd8db57312c60e1930805409c1&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506370670941179994/IMG_0916.png?ex=6a0e0482&is=6a0cb302&hm=d29d409cc0cdd1eda887ec7401eedb1e38ca7969745f64e2a262fc2d6df9fcb7&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371112475426936/IMG_9747.jpg?ex=6a0e04ec&is=6a0cb36c&hm=2ac31510c97f1fbaa2f21edc3f1073910c358eb8b801ef778b0501e01dbfdf41&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371146969518090/IMG_9613.jpg?ex=6a0e04f4&is=6a0cb374&hm=351c01fc2848da3b754a4d7c791b11eecbee73d4c05c36b57b7418bf3c5c4eb4&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371153999171745/IMG_9608.jpg?ex=6a0e04f6&is=6a0cb376&hm=d8a80f6694b49e9952551c2e8dcd28e344223dc192345bf56f52f3f980c5e5ae&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371161913823352/IMG_9607.jpg?ex=6a0e04f8&is=6a0cb378&hm=61b8b801bceb028a0580c6d7540fce5470db445f2c5a6bf99d5cd5675ea256a6&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371169064976394/IMG_9574.jpg?ex=6a0e04f9&is=6a0cb379&hm=46d0f4f91d5afd744116d22d93f4618c5311b6e0053e17222363bbd1f593c660&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371176656670870/IMG_9573.jpg?ex=6a0e04fb&is=6a0cb37b&hm=8e8aa4cc2707ea7b4b1c81d7de5b4ede49f433017ce092651e72ad82017b4044&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371186505023639/IMG_9572.jpg?ex=6a0e04fd&is=6a0cb37d&hm=04e3f7862fc728a263d2ba6b7e3427816febc7cbec033a8844f4d0107528e570&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371292906127522/IMG_9527.jpg?ex=6a0e0517&is=6a0cb397&hm=76597f1ef485ed60a08ae4c1b8ccc1fabc15a916fec0664cc044274f6b177879&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371300778836118/IMG_9526.jpg?ex=6a0e0519&is=6a0cb399&hm=c2914dfb0757c208a4fa348faaea70ee2fa35c0bd4c5ddcd5e455aaaa512afd7&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371319460135163/IMG_8674.jpg?ex=6a0e051d&is=6a0cb39d&hm=abaa53e85d9d277872925df2f57036d53e59ba7939c12bbf0342e726b0591d80&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371339995316234/IMG_8662.jpg?ex=6a0e0522&is=6a0cb3a2&hm=e0583d6f0f2bbecabf0f002a4b4a029ea70098f6d40682220b8ca1ea3ef59a30&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371362434842756/IMG_8661.jpg?ex=6a0e0527&is=6a0cb3a7&hm=b81ae141f9465d3ce9aa887087e441337531e09c763951db69bf404bb50b908c&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371557738676364/image.png?ex=6a0e0556&is=6a0cb3d6&hm=e4dd05866bd7d13a02789faf03e6585df343887cfaf6b922e37922b382f4b398&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371731831394314/IMG_4556.jpg?ex=6a0e057f&is=6a0cb3ff&hm=89607c57ab3ab5e62ef25563425e31c8cbed6bc05e641e8f8e2a516e782e170a&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371886785888338/IMG_2651.jpg?ex=6a0e05a4&is=6a0cb424&hm=f48306c02613b4f78f0a5c79ec7bd0ad88f600a95c44f96154c501a85683a354&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371893232402533/IMG_2649.jpg?ex=6a0e05a6&is=6a0cb426&hm=44743a88f3e7347f4dd833714cfebfb0ce5354ce68f9cc04c990f4fc4dcb2fc2&",
+		"https://cdn.discordapp.com/attachments/1488922204673544296/1506371954469503006/IMG_1629.jpg?ex=6a0e05b4&is=6a0cb434&hm=4e4b185212a3f75f7eccf03d0ee57dde4dda856df328ed49cc8a67dcf24f8687&"
+	  ];
+
+	  // 隨機抽一張
+	  const randomImage =
+		images[Math.floor(Math.random() * images.length)];
+
+	  return message.reply({
+		content: "怎麼ㄌ 想我了嗎( ˶´⚰︎`˵ )",
+		files: [randomImage]
+	  });
+
 	}
 });
 
