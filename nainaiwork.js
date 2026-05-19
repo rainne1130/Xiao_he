@@ -562,11 +562,11 @@ async function generateTranscript(channel) {
   return filePath;
 }
 
-// ===== 上線 =====
+// ===== 上線 ======================================================================
 client.once("ready", async () => {
   console.log(`Bot 上線: ${client.user.tag}`);
 
-  await registerCommands(client); // 第一次開著
+  //await registerCommands(client); // 第一次開著
 });
 // ===== 自動回覆 =====
 client.on("messageCreate", async (message) => {
@@ -592,22 +592,20 @@ client.on("messageCreate", async (message) => {
     return message.reply("感謝凜夜葛格即將送我的罐罐!!");
   }
   if (content === "小賀") {
- return message.reply("怎麼了?要送我罐罐了嗎??");
+	return message.reply("怎麼了?要送我罐罐了嗎??");
   }
   if (content.includes("汪")) {
- return message.reply("你在狗叫什麼?");
+	return message.reply("你在狗叫什麼?");
   }
   if (content.includes("法克")) {
-	  return message.reply("真的是法克...");
+	return message.reply("真的是法克...");
   }
- if (content.includes("鴨鴨")) {
-	return message.reply("他我紫嘖，有事?(氣泡音");
+  if (content.includes("鴨鴨")) {
+	return message.reply("他我紫嘖，有事ㄇ?");
   }
-	if (content.includes("寶貝")) {
+  if (content.includes("寶貝")) {
 	return message.reply("在這!!");
   }
-
-
 });
 
 // ===== 指令處理 =====
