@@ -580,15 +580,16 @@ client.on("messageCreate", async (message) => {
   // 去除前後空白
   const content = message.content.trim();
 
-  // 必須完全符合：
-  // 🪡 🧶 🪵
   if (content === "🪡 🧶 🪵") {
     return message.reply("羨慕個屁!");
   }
 
-  // 偵測普天同慶
   if (content.includes("普天同慶")) {
     return message.reply("普天同慶的啦!!");
+  }
+	
+  if (content.includes("凜夜")) {
+    return message.reply("感謝凜夜葛格即將送我的罐罐!!");
   }
 
 });
