@@ -606,6 +606,14 @@ client.on("messageCreate", async (message) => {
   if (content.includes("寶貝")) {
 	return message.reply("在這!!");
   }
+  
+	if (content.includes("520")) {
+
+	  return message.reply({
+		content: "520快樂",
+		files: ["https://cdn.discordapp.com/attachments/1488922204673544296/1506365743783084142/IMG_4676.png?ex=6a0dffec&is=6a0cae6c&hm=743b7811deaed9fb49821d21a221400a9c2f5dc93ed85016c2dde3b126b6b120&"]
+	  });
+	}
 });
 
 // ===== 指令處理 =====
