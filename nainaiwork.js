@@ -583,22 +583,11 @@ client.on("messageCreate", async (message) => {
   if (content === "🪡 🧶 🪵") {
     return message.reply("羨慕個屁!");
   }
-
-  if (content.includes("普天同慶")) {
-    return message.reply("普天同慶的啦!!");
-  }
-	
-  if (content.includes("凜夜")) {
-    return message.reply("感謝凜夜葛格即將送我的罐罐!!");
-  }
   if (content === "小賀") {
 	return message.reply("怎麼了?要送我罐罐了嗎??");
   }
   if (content.includes("汪")) {
 	return message.reply("你在狗叫什麼?");
-  }
-  if (content.includes("法克")) {
-	return message.reply("真的是法克...");
   }
   if (content.includes("鴨鴨")) {
 	return message.reply("他我紫嘖，有事ㄇ?");
@@ -606,16 +595,7 @@ client.on("messageCreate", async (message) => {
   if (content.includes("寶貝")) {
 	return message.reply("在這!!");
   }
-  
-	if (content.includes("520")) {
-
-	  return message.reply({
-		content: "520快樂",
-		files: ["https://cdn.discordapp.com/attachments/1488922204673544296/1506369478043242676/image.png?ex=6a0e0366&is=6a0cb1e6&hm=fe400ce56c216379e9683d7a83f7ee2a097938e3ef80aa579ee38cfec689dc91&"]
-	  });
-	}
-	
-	if (content.includes("抽小賀")) {
+	/*if (content.includes("抽小賀")) {
 
 	  // 圖片池
 	  const images = [
@@ -650,7 +630,7 @@ client.on("messageCreate", async (message) => {
 		files: [randomImage]
 	  });
 
-	}
+	}*/
 });
 
 // ===== 指令處理 =====
