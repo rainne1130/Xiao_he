@@ -629,7 +629,6 @@ client.on("guildMemberAdd", async (member) => {
 
     // 發送歡迎
     await channel.send({
-      content: `歡迎 <@${member.id}> 🎉`,
       embeds: [embed]
     });
 
