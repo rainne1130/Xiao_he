@@ -14,10 +14,11 @@ const REVIEW_ROLE_ID = "1490593115466240000";
 
 const client = new Client({
   intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
-  ]
+	  GatewayIntentBits.Guilds,
+	  GatewayIntentBits.GuildMembers,
+	  GatewayIntentBits.GuildMessages,
+	  GatewayIntentBits.MessageContent
+	]
 });
 
 // ===== Firebase =====
@@ -567,6 +568,75 @@ client.once("ready", async () => {
   console.log(`Bot 上線: ${client.user.tag}`);
 
   await registerCommands(client); // 第一次開著
+});
+
+// ===== 新成員歡迎 =====
+client.on("guildMemberAdd", async (member) => {
+
+  try {
+
+    // ===== 自動給身分組 =====
+    const role = member.guild.roles.cache.get("1489177896605061161");
+
+    if (role) {
+      await member.roles.add(role);
+    }
+
+    // ===== 歡迎頻道 =====
+    const channel =
+      member.guild.channels.cache.get("1488912637243822091");
+
+    if (!channel) return;
+
+    // ===== 隨機顏色 =====
+    const colors = [
+      0xFFB6C1,
+      0x87CEFA,
+      0x98FB98,
+      0xDDA0DD,
+      0xFFD700,
+      0xFFA07A,
+      0x00CED1
+    ];
+
+    const randomColor =
+      colors[Math.floor(Math.random() * colors.length)];
+
+    // ===== 歡迎 Embed =====
+    const embed = new EmbedBuilder()
+      .setColor(randomColor)
+
+      // 左上角 Bot 小頭像
+      .setAuthor({
+        name: `歡迎 ${member.user.username} 來到 奈奈電競工作室 |｡･･)っ♡`,
+        iconURL: client.user.displayAvatarURL()
+      })
+
+      // 中間內容
+      .setDescription(
+`☃ 想快速瞭解本店請詳閱 <#1488922204673544293> 頻道`
+      )
+
+      // 右側玩家頭像
+      .setThumbnail(
+        member.user.displayAvatarURL({
+          dynamic: true,
+          size: 512
+        })
+      )
+
+      .setTimestamp();
+
+    // 發送歡迎
+    await channel.send({
+      content: `歡迎 <@${member.id}> 🎉`,
+      embeds: [embed]
+    });
+
+  } catch (err) {
+    console.error("歡迎系統錯誤:", err);
+  }
+
 });
 // ===== 自動回覆 =====
 client.on("messageCreate", async (message) => {
